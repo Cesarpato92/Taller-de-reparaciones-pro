@@ -41,7 +41,7 @@ app.get('/api/dashboard', async (req, res) => {
                 equipos!fk_equipo (
                     marca, 
                     modelo, 
-                    clientes!fk_cliente (
+                    clientes!cliente_id (
                         nombre,
                         cedula,
                         telefono
@@ -151,7 +151,7 @@ app.post('/api/registro-total', async (req, res) => {
                 marca: String(datos.marca || '').trim(), 
                 modelo: String(datos.modelo || '').trim(),
                 serie: String(datos.serie || '').trim(),
-                fk_cliente: clienteFinal.id 
+                cliente_id: clienteFinal.id 
             }])
             .select().single();
 
