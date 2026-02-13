@@ -68,7 +68,8 @@ function App() {
 
         {/* FOOTER SIMPLE */}
         <footer className="py-10 text-center text-slate-400 text-xs font-medium uppercase tracking-widest">
-          © {new Date().getFullYear()} Repair-Manager Pro — Sistema de Gestión Técnica
+          © {new Date().getFullYear()} PCELMEDIC - Cesar Patiño - Todos los derechos reservados. <br />
+          <span className="text-slate-500">"Reparando tu mundo, un equipo a la vez."</span>
         </footer>
       </div>
     </Router>
