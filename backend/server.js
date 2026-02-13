@@ -150,7 +150,6 @@ app.post('/api/registro-total', async (req, res) => {
                 tipo_dispositivo: datos.tipo_dispositivo || datos.tipo || 'Otro', 
                 marca: String(datos.marca || '').trim(), 
                 modelo: String(datos.modelo || '').trim(),
-                serie: String(datos.serie || '').trim(),
                 cliente_id: clienteFinal.id 
             }])
             .select().single();
