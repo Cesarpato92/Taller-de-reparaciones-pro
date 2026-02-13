@@ -27,8 +27,7 @@ const probarConexion = async () => {
 };
 probarConexion();
 
-// 1. DASHBOARD (Lectura)
-// Busca esta sección en tu server.js y reemplázala
+// 1. DASHBOARD (Lectura) - LIMPIO DE COMENTARIOS INTERNOS
 app.get('/api/dashboard', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -44,15 +43,19 @@ app.get('/api/dashboard', async (req, res) => {
                     modelo, 
                     clientes!fk_cliente (
                         nombre,
-                        cedula,    // <--- Asegúrate de que esté aquí
+                        cedula,
                         telefono
                     )
                 )
             `);
-        if (error) return res.status(400).json(error);
+        if (error) {
+            console.error("Error en query dashboard:", error);
+            return res.status(400).json(error);
+        }
         res.json(data || []);
     } catch (err) {
-        res.status(500).json({ error: "Error interno" });
+        console.error("Error interno:", err);
+        res.status(500).json({ error: "Error interno del servidor" });
     }
 });
 // 2. ACTUALIZAR (Aquí estaba el probable fallo)
