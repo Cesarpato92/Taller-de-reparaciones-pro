@@ -41,7 +41,7 @@ app.get('/api/dashboard', async (req, res) => {
                 equipos!fk_equipo (
                     marca, 
                     modelo, 
-                    clientes!cliente_id (
+                    clientes!equipos_cliente_id_fkey (
                         nombre,
                         cedula,
                         telefono
