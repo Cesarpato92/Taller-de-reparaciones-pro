@@ -147,7 +147,7 @@ app.post('/api/registro-total', async (req, res) => {
         const { data: nEquipo, error: e2 } = await supabase
             .from('equipos')
             .insert([{ 
-                tipo_dispositivo: datos.tipo_dispositivo || datos.tipo || 'Otro', 
+                tipo: datos.tipo_dispositivo || datos.tipo || 'Otro', 
                 marca: String(datos.marca || '').trim(), 
                 modelo: String(datos.modelo || '').trim(),
                 cliente_id: clienteFinal.id 
