@@ -11,7 +11,10 @@ app.use(cors());
 app.use(express.json()); 
 
 // server.js
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+const supabase = createClient(
+  process.env.SUPABASE_URL, 
+  process.env.SUPABASE_KEY
+);
 
 // Añade esto para probar la conexión apenas inicies el servidor
 const probarConexion = async () => {
