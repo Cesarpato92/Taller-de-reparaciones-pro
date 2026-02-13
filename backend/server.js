@@ -181,5 +181,5 @@ app.post('/api/registro-total', async (req, res) => {
     }
 });
 
-const PORT = 3001;
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Server on port ${PORT}`));
