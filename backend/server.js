@@ -38,7 +38,7 @@ app.get('/api/dashboard', async (req, res) => {
                 descripcion_falla, 
                 diagnostico_tecnico, 
                 costo_estimado, 
-                equipos!fk_equipo (
+                equipos!equipo_id (
                     marca, 
                     modelo, 
                     clientes!equipos_cliente_id_fkey (
@@ -166,7 +166,7 @@ app.post('/api/registro-total', async (req, res) => {
                 descripcion_falla: String(datos.descripcion_falla || datos.falla || 'Sin descripción').trim(), 
                 costo_estimado: costoSeguro,
                 estado: 'Pendiente',
-                fk_equipo: nEquipo.id, 
+                equipo_id: nEquipo.id, 
                 fecha_inicio: new Date().toISOString()
             }])
             .select().single();
