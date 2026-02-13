@@ -48,7 +48,7 @@ app.get('/api/dashboard', async (req, res) => {
                         telefono
                     )
                 )
-            `);
+            `).order('id', { ascending: false });;
         
         if (error) {
             console.error("Error detallado en Dashboard:", error);
