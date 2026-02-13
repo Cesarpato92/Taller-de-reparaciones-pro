@@ -28,6 +28,7 @@ const probarConexion = async () => {
 probarConexion();
 
 // 1. DASHBOARD (Consulta con nombres de relación específicos)
+// 1. DASHBOARD - SOLUCIÓN DEFINITIVA PGRST201
 app.get('/api/dashboard', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -38,10 +39,10 @@ app.get('/api/dashboard', async (req, res) => {
                 descripcion_falla, 
                 diagnostico_tecnico, 
                 costo_estimado, 
-                equipos!equipo_id ( 
+                equipos!reparaciones_equipo_id_fkey (
                     marca, 
                     modelo, 
-                    clientes!cliente_id ( 
+                    clientes!equipos_cliente_id_fkey (
                         nombre,
                         cedula,
                         telefono
@@ -51,7 +52,6 @@ app.get('/api/dashboard', async (req, res) => {
         
         if (error) {
             console.error("Error detallado en Dashboard:", error);
-            // Si el error persiste, probaremos la versión simplificada abajo
             return res.status(400).json(error);
         }
         res.json(data || []);
