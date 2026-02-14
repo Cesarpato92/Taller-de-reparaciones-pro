@@ -277,7 +277,9 @@ export default function Admin() {
                 // Extraemos equipo y cliente fila por fila
                 const eq = r.equipos || {};
                 const cli = eq.cliente || {}; // 'cliente' porque así lo definiste en el server
-
+                console.log("Registro original:", r);
+                console.log("Equipo extraído:", eq);
+                console.log("Cliente extraído:", cli);
                 return {
                     ...r,
                     // ESTAS son las variables que tu tbody lee
