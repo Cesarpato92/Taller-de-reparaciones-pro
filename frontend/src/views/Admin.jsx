@@ -269,36 +269,36 @@ export default function Admin() {
 
     // --- 1. CARGA Y LIMPIEZA PROFUNDA DE DATOS ---
     const load = async () => {
-    try {
-        const data = await tallerService.getDashboard();
-        console.log("DATOS LLEGANDO:", data);
+        try {
+            const data = await tallerService.getDashboard();
+            
+            if (Array.isArray(data)) {
+                const datosNormalizados = data.map(r => {
+                    // Verificamos qué trae 'equipos'
+                    const eq = r.equipos || {};
+                    
+                    // Verificamos qué trae 'cliente' dentro de equipo
+                    const cli = eq.cliente || {};
 
-        if (Array.isArray(data)) {
-            const datosNormalizados = data.map(r => {
-                // 1. Extraer equipo (manejamos si viene como objeto o array)
-                let eq = r.equipos || {};
-                if (Array.isArray(eq)) eq = eq[0] || {};
+                    // LOG DE EMERGENCIA: Solo para los que salen "Sin nombre"
+                    if (!cli.nombre) {
+                        console.warn(`Reparación ID ${r.id} no tiene cliente vinculado. Estructura recibida:`, r);
+                    }
 
-                // 2. Extraer cliente (usando el alias 'cliente' que definiste en el server)
-                let cli = eq.cliente || {};
-                if (Array.isArray(cli)) cli = cli[0] || {};
-
-                return {
-                    ...r,
-                    // Mapeo directo a lo que vimos en tu consola:
-                    // eq.cliente.nombre, eq.marca, etc.
-                    nombre_render: cli.nombre || 'Sin nombre',
-                    cedula_render: cli.cedula || 'S/N',
-                    marca_render: eq.marca || '---',
-                    modelo_render: eq.modelo || '---'
-                };
-            });
-            setReps(datosNormalizados);
+                    return {
+                        ...r,
+                        nombre_render: cli.nombre || 'Sin nombre',
+                        cedula_render: cli.cedula || 'S/N',
+                        marca_render: eq.marca || '---',
+                        modelo_render: eq.modelo || '---'
+                    };
+                });
+                setReps(datosNormalizados);
+            }
+        } catch (error) { 
+            console.error("Error cargando dashboard:", error); 
         }
-    } catch (error) {
-        console.error("Error en el mapeo:", error);
-    }
-};
+    };
 
     useEffect(() => { load(); }, []);
 
