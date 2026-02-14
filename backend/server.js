@@ -67,11 +67,12 @@ app.put('/api/reparaciones/:id', async (req, res) => {
 
     // 1. Limpieza extrema del ID
     const cleanId = id.trim();
-
-    console.log(`--- INTENTO DE UPDATE ---`);
-    console.log(`ID original: "${id}" (Longitud: ${id.length})`);
-    console.log(`ID limpio: "${cleanId}"`);
-    console.log(`Datos:`, datos);
+    
+    //para pruenas
+    //console.log(`--- INTENTO DE UPDATE ---`);
+    //console.log(`ID original: "${id}" (Longitud: ${id.length})`);
+    //console.log(`ID limpio: "${cleanId}"`);
+    //console.log(`Datos:`, datos);
 
     // 2. Ejecutar Update
     const { data, error } = await supabase
