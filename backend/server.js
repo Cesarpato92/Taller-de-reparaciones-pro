@@ -42,7 +42,7 @@ app.get('/api/dashboard', async (req, res) => {
                 equipos!reparaciones_equipo_id_fkey (
                     marca, 
                     modelo, 
-                    clientes!equipos_cliente_id_fkey (
+                    cliente:clientes!equipos_cliente_id_fkey (
                         nombre,
                         cedula,
                         telefono
