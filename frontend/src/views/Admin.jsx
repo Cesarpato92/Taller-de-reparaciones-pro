@@ -271,19 +271,22 @@ export default function Admin() {
     const load = async () => {
     try {
         const data = await tallerService.getDashboard();
-        console.log("DATOS LLEGANDO DEL SERVER:", data); 
+        console.log("DATOS LLEGANDO:", data);
 
         if (Array.isArray(data)) {
             const datosNormalizados = data.map(r => {
-                // 1. Extraer el equipo usando el nombre de la FK que definió tu server
-                const eq = r['equipos!reparaciones_equipo_id_fkey'] || {};
-                
-                // 2. Extraer el cliente (en tu server usaste el alias 'cliente')
-                const cli = eq.cliente || {};
+                // 1. Extraer equipo (manejamos si viene como objeto o array)
+                let eq = r.equipos || {};
+                if (Array.isArray(eq)) eq = eq[0] || {};
+
+                // 2. Extraer cliente (usando el alias 'cliente' que definiste en el server)
+                let cli = eq.cliente || {};
+                if (Array.isArray(cli)) cli = cli[0] || {};
 
                 return {
                     ...r,
-                    // Mapeamos a los nombres que usa tu tabla de React
+                    // Mapeo directo a lo que vimos en tu consola:
+                    // eq.cliente.nombre, eq.marca, etc.
                     nombre_render: cli.nombre || 'Sin nombre',
                     cedula_render: cli.cedula || 'S/N',
                     marca_render: eq.marca || '---',
@@ -292,8 +295,8 @@ export default function Admin() {
             });
             setReps(datosNormalizados);
         }
-    } catch (error) { 
-        console.error("Error cargando dashboard:", error); 
+    } catch (error) {
+        console.error("Error en el mapeo:", error);
     }
 };
 
