@@ -325,18 +325,23 @@ export default function Admin() {
 }, [reps, filtro]);
 
     // --- 3. MANEJO DE ESTADO ---
-    const handleEstado = async (id, nuevoEstado) => {
+  const handleEstado = async (id, nuevoEstado) => {
     try {
+        // MUY IMPORTANTE: Verifica que el id no sea undefined
+        if (!id) return alert("ID de reparación no encontrado");
+
         const dataUpdate = { 
             estado: nuevoEstado,
+            // Si es entregado, ponemos la fecha de hoy
             fecha_fin: nuevoEstado === 'Entregado' ? new Date().toISOString().split('T')[0] : null 
         };
+
         await tallerService.actualizarReparacion(id, dataUpdate);
-        // Volvemos a llamar a load() que ya tiene la lógica de nombres arreglada
+        
+        // RECARGA LOS DATOS: Esto es vital para ver el cambio
         await load(); 
     } catch (error) { 
-        console.error("Error:", error);
-        alert("Error al actualizar"); 
+        console.error("Error al actualizar estado:", error);
     }
 };
 
