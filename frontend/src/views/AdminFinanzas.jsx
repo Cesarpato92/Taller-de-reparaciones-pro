@@ -76,7 +76,7 @@ export default function AdminFinanzas({ reparaciones = [] }) {
                 )}
             </div>
 
-            {/* HEADER (Igual a tu imagen) */}
+            {/* HEADER  */}
             <div className="bg-white p-8 rounded-3xl border-2 border-slate-900 flex justify-between items-center">
                 <div>
                     <h2 className="text-3xl font-black text-slate-900">Libro de Ingresos</h2>
@@ -90,7 +90,7 @@ export default function AdminFinanzas({ reparaciones = [] }) {
                 </div>
             </div>
 
-            {/* TABLA (Igual a tu imagen) */}
+            {/* TABLA */}
             <div className="bg-white border-2 border-slate-900 rounded-3xl overflow-hidden shadow-sm">
                 <table className="w-full text-left">
                     <thead className="bg-slate-50 border-b-2 border-slate-900">

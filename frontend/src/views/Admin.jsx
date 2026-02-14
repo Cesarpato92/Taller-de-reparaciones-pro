@@ -262,6 +262,9 @@ function EditableCosto({ id, valorInicial, onSave }) {
 }
 
 // --- COMPONENTE PRINCIPAL ---
+// ... (manten tus imports igual arriba)
+
+// Modifica la lógica de filtrado dentro de la función Admin para que sea más robusta:
 export default function Admin() {
     const [reps, setReps] = useState([]); 
     const [filtroCedula, setFiltroCedula] = useState('');
@@ -276,39 +279,25 @@ export default function Admin() {
 
     useEffect(() => { load(); }, []);
 
-    // ACTUALIZACIÓN DE ESTADO CON FECHA AUTOMÁTICA
-    const handleEstado = async (id, nuevoEstado) => {
-        try {
-            const dataUpdate = { estado: nuevoEstado };
-            
-            if (nuevoEstado === 'Entregado') {
-                // Formato YYYY-MM-DD para la base de datos
-                dataUpdate.fecha_fin = new Date().toISOString().split('T')[0];
-            } else {
-                dataUpdate.fecha_fin = null;
-            }
-
-            await tallerService.actualizarReparacion(id, dataUpdate);
-            await load(); 
-        } catch (error) { 
-            console.error(error);
-            alert("Error al actualizar"); 
-        }
-    };
-
+    // --- ESTA ES LA PARTE CLAVE: NORMALIZACIÓN DE DATOS ---
     const reparacionesFiltradas = reps.filter(r => {
-        const eq = r.equipos || r['equipos!fk_equipo'];
-        const cli = eq?.clientes || eq?.['clientes!fk_cliente'];
+        // Buscamos el equipo en cualquier propiedad que empiece por 'equipos'
+        const eq = r.equipos || r['equipos!reparaciones_equipo_id_fkey'] || r['equipos!fk_equipo'];
+        
+        // Buscamos el cliente dentro del equipo
+        const cli = eq?.cliente || eq?.clientes || eq?.['clientes!equipos_cliente_id_fkey'] || eq?.['clientes!fk_cliente'];
+        
         const search = filtroCedula.toLowerCase();
-        return (cli?.cedula || '').toLowerCase().includes(search) || (cli?.nombre || '').toLowerCase().includes(search);
+        return (
+            (cli?.cedula || '').toLowerCase().includes(search) || 
+            (cli?.nombre || '').toLowerCase().includes(search) ||
+            (eq?.marca || '').toLowerCase().includes(search)
+        );
     });
 
     return (
         <div className="p-4 bg-slate-50 min-h-screen">
-            <div className="max-w-7xl mx-auto flex gap-2 mb-8 bg-slate-200/50 p-1.5 rounded-2xl w-fit font-black text-xs uppercase">
-                <button onClick={() => setPestana('taller')} className={`px-8 py-2.5 rounded-xl transition-all ${pestana === 'taller' ? 'bg-white shadow-md text-blue-600' : 'text-slate-500'}`}>⚙️ Gestión Taller</button>
-                <button onClick={() => setPestana('finanzas')} className={`px-8 py-2.5 rounded-xl transition-all ${pestana === 'finanzas' ? 'bg-white shadow-md text-blue-600' : 'text-slate-500'}`}>💰 Finanzas Admin</button>
-            </div>
+            {/* ... (tu menú de pestañas igual) */}
 
             <div className="max-w-7xl mx-auto">
                 {pestana === 'taller' ? (
@@ -318,10 +307,13 @@ export default function Admin() {
                             <DashboardResumenHoy reparaciones={reps} />
                         </div>
                         <div className="lg:col-span-3 space-y-4">
+                            {/* Buscador */}
                             <div className="bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-4">
                                 <span className="text-slate-400">🔍</span>
-                                <input type="text" placeholder="Buscar por cédula o nombre..." className="w-full outline-none text-sm" value={filtroCedula} onChange={(e) => setFiltroCedula(e.target.value)} />
+                                <input type="text" placeholder="Buscar por cédula, nombre o marca..." className="w-full outline-none text-sm" value={filtroCedula} onChange={(e) => setFiltroCedula(e.target.value)} />
                             </div>
+
+                            {/* Tabla */}
                             <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
                                 <table className="w-full text-left text-sm">
                                     <thead className="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 border-b">
@@ -329,22 +321,43 @@ export default function Admin() {
                                     </thead>
                                     <tbody className="divide-y">
                                         {reparacionesFiltradas.map(r => {
-                                            const eq = r.equipos || r['equipos!fk_equipo'];
-                                            const cli = eq?.clientes || eq?.['clientes!fk_cliente'];
+                                            // NORMALIZAMOS OTRA VEZ AQUÍ PARA PINTAR
+                                            const eq = r.equipos || r['equipos!reparaciones_equipo_id_fkey'] || r['equipos!fk_equipo'];
+                                            const cli = eq?.cliente || eq?.clientes || eq?.['clientes!equipos_cliente_id_fkey'] || eq?.['clientes!fk_cliente'];
+                                            
                                             return (
                                                 <tr key={r.id} className="hover:bg-blue-50/50 transition-colors">
                                                     <td className="p-4">
                                                         <div className="flex flex-col">
-                                                            <span className="font-bold text-slate-900">{cli?.nombre}</span>
-                                                            <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded mt-1 w-fit">CC: {cli?.cedula || 'S/N'}</span>
+                                                            {/* NOMBRE DEL CLIENTE */}
+                                                            <span className="font-bold text-slate-900">{cli?.nombre || 'Sin nombre'}</span>
+                                                            <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded mt-1 w-fit">
+                                                                CC: {cli?.cedula || '---'}
+                                                            </span>
                                                         </div>
                                                     </td>
-                                                    <td className="p-4 font-medium text-slate-700">{eq?.marca} <span className="text-slate-400">{eq?.modelo}</span></td>
-                                                    <td className="p-4"><div className="space-y-1"><p className="text-[11px] italic text-slate-400">"{r.descripcion_falla}"</p><EditableDiagnostico id={r.id} valorInicial={r.diagnostico_tecnico} onSave={load} /></div></td>
-                                                    <td className="p-4 text-center"><EditableCosto id={r.id} valorInicial={r.costo_estimado} onSave={load} /></td>
+                                                    <td className="p-4 font-medium text-slate-700">
+                                                        {eq?.marca} <span className="text-slate-400">{eq?.modelo}</span>
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="space-y-1">
+                                                            <p className="text-[11px] italic text-slate-400">"{r.descripcion_falla}"</p>
+                                                            <EditableDiagnostico id={r.id} valorInicial={r.diagnostico_tecnico} onSave={load} />
+                                                        </div>
+                                                    </td>
                                                     <td className="p-4 text-center">
-                                                        <select value={r.estado} onChange={(e) => handleEstado(r.id, e.target.value)} className={`text-[10px] font-black px-3 py-1 rounded-full outline-none cursor-pointer transition-colors ${r.estado === 'Entregado' ? 'bg-blue-600 text-white' : 'bg-amber-100 text-amber-700'}`}>
-                                                            <option value="Pendiente">PENDIENTE</option><option value="En Proceso">EN PROCESO</option><option value="Reparado">REPARADO</option><option value="Entregado">ENTREGADO</option>
+                                                        <EditableCosto id={r.id} valorInicial={r.costo_estimado} onSave={load} />
+                                                    </td>
+                                                    <td className="p-4 text-center">
+                                                        <select 
+                                                            value={r.estado} 
+                                                            onChange={(e) => handleEstado(r.id, e.target.value)} 
+                                                            className={`text-[10px] font-black px-3 py-1 rounded-full outline-none cursor-pointer transition-colors ${r.estado === 'Entregado' ? 'bg-blue-600 text-white' : 'bg-amber-100 text-amber-700'}`}
+                                                        >
+                                                            <option value="Pendiente">PENDIENTE</option>
+                                                            <option value="En Proceso">EN PROCESO</option>
+                                                            <option value="Reparado">REPARADO</option>
+                                                            <option value="Entregado">ENTREGADO</option>
                                                         </select>
                                                     </td>
                                                 </tr>
