@@ -12,19 +12,21 @@ export default function ClienteConsulta() {
         try {
             const data = await tallerService.getDashboard();
             
-            // 1. Filtrar por cédula (estructura correcta según tu SQL)
+            // 1. FILTRADO CORREGIDO
             const filtrados = data.filter(r => {
-                // Acceso correcto a la cédula a través de la relación
-                const cedulaCliente = r.equipos?.clientes?.cedula;
+                // Acceso según tu alias de servidor: r.equipos.cliente
+                const eq = r.equipos || {};
+                const cli = eq.cliente || {}; // Cambiado de 'clientes' a 'cliente'
                 
-                // Si no encuentra con la primera estructura, intenta con la alternativa
-                // pero según tu SQL, debería ser r.equipos.clientes.cedula
+                const cedulaCliente = cli.cedula;
+                
+                // Comparación exacta o parcial de la cédula
                 return cedulaCliente && cedulaCliente.toString().includes(query.trim());
             });
 
-            // 2. Ordenar: Pendientes/En Proceso arriba, Entregados abajo
+            // 2. ORDENAR
             const ordenados = filtrados.sort((a, b) => {
-                const prioridad = { "Pendiente": 1, "En Proceso": 2, "Reparado": 3, "Entregado": 4 };
+                const prioridad = { "Pendiente": 1, "En Reparación": 2, "Listo": 3, "Entregado": 4 };
                 return (prioridad[a.estado] || 99) - (prioridad[b.estado] || 99);
             });
 
@@ -36,12 +38,13 @@ export default function ClienteConsulta() {
         }
     };
 
-    // Función para obtener datos del equipo de manera segura
+    // Función actualizada con los nombres de propiedad correctos
     const getEquipoData = (reparacion) => {
+        const eq = reparacion.equipos || {};
         return {
-            marca: reparacion.equipos?.marca || 'Marca no disponible',
-            modelo: reparacion.equipos?.modelo || 'Modelo no disponible',
-            cliente: reparacion.equipos?.clientes || null
+            marca: eq.marca || 'Marca no disponible',
+            modelo: eq.modelo || 'Modelo no disponible',
+            cliente: eq.cliente || null // Cambiado a 'cliente'
         };
     };
 
@@ -55,7 +58,7 @@ export default function ClienteConsulta() {
                     placeholder="Ingresa tu número de cédula..." 
                     value={query}
                     onChange={e => setQuery(e.target.value)} 
-                    onKeyPress={(e) => e.key === 'Enter' && buscar()}
+                    onKeyDown={(e) => e.key === 'Enter' && buscar()}
                 />
                 <button 
                     onClick={buscar} 
@@ -77,7 +80,7 @@ export default function ClienteConsulta() {
                                         <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${
                                             res.estado === 'Entregado' ? 'bg-slate-200 text-slate-600' : 
                                             res.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-700' :
-                                            res.estado === 'En Proceso' ? 'bg-blue-100 text-blue-700' :
+                                            res.estado === 'En Reparación' ? 'bg-blue-100 text-blue-700' :
                                             'bg-green-100 text-green-700'
                                         }`}>
                                             {res.estado}
@@ -87,7 +90,7 @@ export default function ClienteConsulta() {
                                         </h3>
                                         {equipo.cliente && (
                                             <p className="text-sm text-slate-500 mt-1">
-                                                Cliente: {equipo.cliente.nombre} - {equipo.cliente.telefono}
+                                                Cliente: <span className="font-bold">{equipo.cliente.nombre}</span>
                                             </p>
                                         )}
                                     </div>
@@ -113,9 +116,11 @@ export default function ClienteConsulta() {
                             No se encontraron equipos asociados a la cédula: <span className="font-bold text-slate-600">{query}</span>
                         </p>
                     ) : (
-                        <p className="text-center text-slate-400 italic">
-                            Ingresa tu cédula para consultar el estado de tus equipos
-                        </p>
+                        <div className="text-center py-10">
+                            <p className="text-slate-400 italic">
+                                Ingresa tu cédula para consultar el estado de tus equipos
+                            </p>
+                        </div>
                     )
                 )}
             </div>
