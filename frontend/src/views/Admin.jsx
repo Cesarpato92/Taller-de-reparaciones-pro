@@ -263,126 +263,178 @@ function EditableCosto({ id, valorInicial, onSave }) {
 
 // --- COMPONENTE PRINCIPAL ---
 export default function Admin() {
-    const [reps, setReps] = useState([]);
-    const [busqueda, setBusqueda] = useState("");
+    const [reps, setReps] = useState([]); 
+    const [filtro, setFiltro] = useState('');
+    const [pestana, setPestana] = useState('taller');
 
-    // 1. CARGA Y NORMALIZACIÓN (Aquí se arregla el error de nombres repetidos)
+    // --- 1. CARGA Y LIMPIEZA PROFUNDA DE DATOS ---
     const load = async () => {
-        try {
-            const data = await tallerService.getDashboard();
-            console.log("Datos brutos del servidor:", data);
+    try {
+        const res = await tallerService.getDashboard();
+        
+        if (Array.isArray(res)) {
+            const datosNormalizados = res.map(r => {
+                // Extraemos equipo y cliente fila por fila
+                const eq = r.equipos || {};
+                const cli = eq.cliente || {}; // 'cliente' porque así lo definiste en el server
 
-            if (Array.isArray(data)) {
-                const datosNormalizados = data.map(r => {
-                    // Acceso dinámico según la estructura de tu console.log
-                    const eq = r.equipos || {};
-                    const cli = eq.cliente || {}; // 'cliente' es el alias que pusiste en tu backend
-
-                    return {
-                        ...r,
-                        // Creamos propiedades planas para que React no se confunda
-                        nombre_render: cli.nombre || 'Sin nombre',
-                        cedula_render: cli.cedula || 'S/N',
-                        marca_render: eq.marca || '---',
-                        modelo_render: eq.modelo || '---'
-                    };
-                });
-                setReps(datosNormalizados);
-            }
-        } catch (error) {
-            console.error("Error cargando dashboard:", error);
+                return {
+                    ...r,
+                    // ESTAS son las variables que tu tbody lee
+                    nombre_render: cli.nombre || 'Sin nombre',
+                    cedula_render: cli.cedula || 'S/N',
+                    marca_render: eq.marca || '---',
+                    modelo_render: eq.modelo || '---'
+                };
+            });
+            
+            // IMPORTANTE: Guardamos en el estado original
+            setReps(datosNormalizados); 
         }
-    };
+    } catch (error) {
+        console.error("Error cargando datos:", error);
+    }
+};
 
     useEffect(() => { load(); }, []);
 
-    // 2. FILTRADO
-    const reparacionesFiltradas = reps.filter(r => 
-        r.nombre_render.toLowerCase().includes(busqueda.toLowerCase()) ||
-        r.cedula_render.includes(busqueda) ||
-        r.id.includes(busqueda)
-    );
+    // --- 2. FILTRADO UTILIZANDO LAS NUEVAS PROPIEDADES ---
+    const reparacionesFiltradas = useMemo(() => {
+    // Aseguramos que el término de búsqueda sea un string
+    const search = (filtro || '').toLowerCase();
 
-    const handleEstado = async (id, nuevoEstado) => {
-        try {
-            await tallerService.actualizarReparacion(id, { estado: nuevoEstado });
-            load();
-        } catch (error) {
-            console.error("Error al cambiar estado:", error);
-        }
-    };
+    return reps.filter(r => {
+        // Usamos las propiedades "_render" que creamos en la función load
+        // Agregamos || '' para que si el dato es null, no explote
+        const nombre = (r.nombre_render || '').toLowerCase();
+        const cedula = (r.cedula_render || '').toLowerCase();
+        const marca = (r.marca_render || '').toLowerCase();
+        const modelo = (r.modelo_render || '').toLowerCase();
+
+        return (
+            nombre.includes(search) || 
+            cedula.includes(search) ||
+            marca.includes(search) ||
+            modelo.includes(search)
+        );
+    });
+}, [reps, filtro]);
+
+    // --- 3. MANEJO DE ESTADO ---
+  const handleEstado = async (id, nuevoEstado) => {
+    try {
+        // MUY IMPORTANTE: Verifica que el id no sea undefined
+        if (!id) return alert("ID de reparación no encontrado");
+
+        const dataUpdate = { 
+            estado: nuevoEstado,
+            // Si es entregado, ponemos la fecha de hoy
+            fecha_fin: nuevoEstado === 'Entregado' ? new Date().toISOString().split('T')[0] : null 
+        };
+
+        await tallerService.actualizarReparacion(id, dataUpdate);
+        
+        // RECARGA LOS DATOS: Esto es vital para ver el cambio
+        await load(); 
+    } catch (error) { 
+        console.error("Error al actualizar estado:", error);
+    }
+};
 
     return (
-        <div className="p-6 bg-slate-50 min-h-screen">
-            <div className="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                
-                {/* BUSCADOR */}
-                <div className="p-4 border-b border-slate-100 bg-white">
-                    <input 
-                        type="text"
-                        placeholder="Buscar por cliente, cédula o ID..."
-                        className="w-full max-w-md border border-slate-200 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        value={busqueda}
-                        onChange={(e) => setBusqueda(e.target.value)}
-                    />
-                </div>
+        <div className="p-4 bg-slate-50 min-h-screen">
+            {/* Menú de Pestañas */}
+            <div className="max-w-7xl mx-auto flex gap-2 mb-8 bg-slate-200/50 p-1.5 rounded-2xl w-fit font-black text-xs uppercase">
+                <button onClick={() => setPestana('taller')} className={`px-8 py-2.5 rounded-xl transition-all ${pestana === 'taller' ? 'bg-white shadow-md text-blue-600' : 'text-slate-500'}`}>⚙️ Gestión Taller</button>
+                <button onClick={() => setPestana('finanzas')} className={`px-8 py-2.5 rounded-xl transition-all ${pestana === 'finanzas' ? 'bg-white shadow-md text-blue-600' : 'text-slate-500'}`}>💰 Finanzas Admin</button>
+            </div>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead className="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500">Cliente</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500">Equipo</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500">Falla / Diagnóstico</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500 text-center">Costo</th>
-                                <th className="p-4 text-xs font-bold uppercase text-slate-500 text-center">Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y">
-                            {reparacionesFiltradas.map(r => (
-                                <tr key={r.id} className="hover:bg-blue-50/50 transition-colors">
-                                    <td className="p-4">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-slate-900">{r.nombre_render}</span>
-                                            <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded mt-1 w-fit">
-                                                CC: {r.cedula_render}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="p-4 font-medium text-slate-700">
-                                        {r.marca_render} <span className="text-slate-400 font-normal">{r.modelo_render}</span>
-                                    </td>
-                                    <td className="p-4">
-                                        <div className="space-y-1">
-                                            <p className="text-[11px] italic text-slate-400">"{r.descripcion_falla}"</p>
-                                            <EditableDiagnostico id={r.id} valorInicial={r.diagnostico_tecnico} onSave={load} />
-                                        </div>
-                                    </td>
-                                    <td className="p-4 text-center">
-                                        <EditableCosto id={r.id} valorInicial={r.costo_estimado} onSave={load} />
-                                    </td>
-                                    <td className="p-4 text-center">
-                                        <select 
-                                            value={r.estado} 
-                                            onChange={(e) => handleEstado(r.id, e.target.value)}
-                                            className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-lg border-2 transition-all ${
-                                                r.estado === 'Entregado' ? 'bg-green-100 text-green-700 border-green-200' : 
-                                                r.estado === 'En Reparación' ? 'bg-blue-100 text-blue-700 border-blue-200' : 
-                                                'bg-slate-100 text-slate-600 border-slate-200'
-                                            }`}
-                                        >
-                                            <option value="Pendiente">Pendiente</option>
-                                            <option value="En Reparación">En Reparación</option>
-                                            <option value="Listo">Listo</option>
-                                            <option value="Entregado">Entregado</option>
-                                        </select>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            <div className="max-w-7xl mx-auto">
+                {pestana === 'taller' ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in duration-500">
+                        <div className="space-y-6">
+                            <RegistroForm onRefresh={load} />
+                            <DashboardResumenHoy reparaciones={reps} />
+                        </div>
+                        
+                        <div className="lg:col-span-3 space-y-4">
+                            {/* Buscador */}
+                            <div className="bg-white p-4 rounded-2xl border shadow-sm flex items-center gap-4">
+                                <span className="text-slate-400">🔍</span>
+                                <input 
+                                    type="text" 
+                                    placeholder="Buscar por cliente, cédula o equipo..." 
+                                    className="w-full outline-none text-sm" 
+                                    value={filtro} 
+                                    onChange={(e) => setFiltro(e.target.value)} 
+                                />
+                            </div>
+
+                            {/* Tabla con Datos Normalizados */}
+                            <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
+                                <table className="w-full text-left text-sm">
+                                    <thead className="bg-slate-50 text-[10px] uppercase font-bold text-slate-400 border-b">
+                                        <tr>
+                                            <th className="p-4">Cliente</th>
+                                            <th className="p-4">Equipo</th>
+                                            <th className="p-4">Falla / Diagnóstico</th>
+                                            <th className="p-4 text-center">Costo</th>
+                                            <th className="p-4 text-center">Estado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y">
+                                        {reparacionesFiltradas.map(r => (
+                                            <tr key={r.id} className="hover:bg-blue-50/50 transition-colors">
+                                                <td className="p-4">
+                                                    <div className="flex flex-col">
+                                                        {/* USAMOS EL NOMBRE NORMALIZADO */}
+                                                        <span className="font-bold text-slate-900">{r.nombre_render}</span>
+                                                        <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded mt-1 w-fit">
+                                                            CC: {r.cedula_render}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 font-medium text-slate-700">
+                                                    {/* USAMOS MARCA Y MODELO NORMALIZADOS */}
+                                                    {r.marca_render} <span className="text-slate-400">{r.modelo_render}</span>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="space-y-1">
+                                                        <p className="text-[11px] italic text-slate-400">"{r.descripcion_falla}"</p>
+                                                        <EditableDiagnostico id={r.id} valorInicial={r.diagnostico_tecnico} onSave={load} />
+                                                    </div>
+                                                </td>
+                                                <td className="p-4 text-center">
+                                                    <EditableCosto id={r.id} valorInicial={r.costo_estimado} onSave={load} />
+                                                </td>
+                                                {/* ... resto de la fila (Estado) ... */}
+                                                <td className="p-4 text-center">
+                                                    <select 
+                                                        value={r.estado} 
+                                                        onChange={(e) => handleEstado(r.id, e.target.value)}
+                                                        className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-lg border-2 ${
+                                                            r.estado === 'Entregado' ? 'bg-green-100 text-green-700 border-green-200' : 
+                                                            r.estado === 'En Reparación' ? 'bg-blue-100 text-blue-700 border-blue-200' : 
+                                                            'bg-slate-100 text-slate-600 border-slate-200'
+                                                        }`}
+                                                    >
+                                                        <option value="Recibido">Recibido</option>
+                                                        <option value="En Reparación">En Reparación</option>
+                                                        <option value="Listo">Listo</option>
+                                                        <option value="Entregado">Entregado</option>
+                                                    </select>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <SeccionFinanzas reparaciones={reps} />
+                )}
             </div>
         </div>
     );
-};
+}
