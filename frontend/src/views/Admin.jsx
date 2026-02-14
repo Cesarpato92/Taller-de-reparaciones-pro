@@ -269,33 +269,33 @@ export default function Admin() {
 
     // --- 1. CARGA Y LIMPIEZA PROFUNDA DE DATOS ---
     const load = async () => {
-        try {
-            const data = await tallerService.getDashboard();
-            console.log("DATOS REALES DE TU API:", data); // REVISA LA CONSOLA F12
+    try {
+        const data = await tallerService.getDashboard();
+        console.log("DATOS LLEGANDO DEL SERVER:", data); 
 
-            if (Array.isArray(data)) {
-                const datosNormalizados = data.map(r => {
-                    // Buscamos el equipo en r.equipos o r.equipo
-                    const eq = r.equipos || r.equipo || {};
-                    
-                    // Buscamos el cliente en r.clientes, r.cliente o dentro del equipo
-                    const cli = r.clientes || r.cliente || eq.clientes || eq.cliente || {};
+        if (Array.isArray(data)) {
+            const datosNormalizados = data.map(r => {
+                // 1. Extraer el equipo usando el nombre de la FK que definió tu server
+                const eq = r['equipos!reparaciones_equipo_id_fkey'] || {};
+                
+                // 2. Extraer el cliente (en tu server usaste el alias 'cliente')
+                const cli = eq.cliente || {};
 
-                    return {
-                        ...r,
-                        // Buscamos el nombre en todas las variantes posibles que suelen enviar las APIs
-                        nombre_render: r.nombre_cliente || cli.nombre || r.cliente_nombre || 'Sin nombre',
-                        cedula_render: r.cedula_cliente || cli.cedula || r.cedula || 'S/N',
-                        marca_render: eq.marca || r.marca || '---',
-                        modelo_render: eq.modelo || r.modelo || '---'
-                    };
-                });
-                setReps(datosNormalizados);
-            }
-        } catch (error) { 
-            console.error("Error cargando dashboard:", error); 
+                return {
+                    ...r,
+                    // Mapeamos a los nombres que usa tu tabla de React
+                    nombre_render: cli.nombre || 'Sin nombre',
+                    cedula_render: cli.cedula || 'S/N',
+                    marca_render: eq.marca || '---',
+                    modelo_render: eq.modelo || '---'
+                };
+            });
+            setReps(datosNormalizados);
         }
-    };
+    } catch (error) { 
+        console.error("Error cargando dashboard:", error); 
+    }
+};
 
     useEffect(() => { load(); }, []);
 
