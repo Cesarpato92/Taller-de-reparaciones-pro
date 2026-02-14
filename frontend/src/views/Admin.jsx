@@ -273,16 +273,19 @@ export default function Admin() {
         const data = await tallerService.getDashboard();
         if (Array.isArray(data)) {
             const datosNormalizados = data.map(r => {
-                // Buscamos el objeto equipo probando todas las variantes de nombre de Supabase
-                const eq = r.equipos || r['equipos!fk_equipo'] || r['equipos!reparaciones_equipo_id_fkey'] || {};
+                // 1. Extraer Equipo (manejamos posibles nombres de relación)
+                const eq = r.equipos || r['equipos!fk_equipo'] || {};
                 
-                // Buscamos el objeto cliente dentro del equipo
-                const cli = eq.clientes || eq['clientes!fk_cliente'] || eq['clientes!equipos_cliente_id_fkey'] || {};
+                // 2. Extraer Cliente (manejamos si viene dentro del equipo)
+                // Nota: Verificamos si cli es un objeto o el primer elemento de un array
+                let cli = eq.clientes || eq['clientes!fk_cliente'] || {};
+                if (Array.isArray(cli)) cli = cli[0] || {}; 
 
                 return {
                     ...r,
-                    // EXTRAEMOS LOS DATOS REALES A PROPIEDADES PLANAS
-                    nombre_render: cli.nombre || 'Sin nombre',
+                    // Si el nombre sigue fallando, es probable que la propiedad se llame distinto en tu BD
+                    // Verifica si en tu tabla es 'nombre' o 'nombre_completo'
+                    nombre_render: cli.nombre || cli.nombre_cliente || 'Sin nombre',
                     cedula_render: cli.cedula || 'S/N',
                     marca_render: eq.marca || '---',
                     modelo_render: eq.modelo || '---'
