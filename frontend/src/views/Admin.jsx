@@ -269,34 +269,33 @@ export default function Admin() {
 
     // --- 1. CARGA Y LIMPIEZA PROFUNDA DE DATOS ---
     const load = async () => {
-    try {
-        const data = await tallerService.getDashboard();
-        if (Array.isArray(data)) {
-            const datosNormalizados = data.map(r => {
-                // 1. Extraer Equipo (manejamos posibles nombres de relación)
-                const eq = r.equipos || r['equipos!fk_equipo'] || {};
-                
-                // 2. Extraer Cliente (manejamos si viene dentro del equipo)
-                // Nota: Verificamos si cli es un objeto o el primer elemento de un array
-                let cli = eq.clientes || eq['clientes!fk_cliente'] || {};
-                if (Array.isArray(cli)) cli = cli[0] || {}; 
+        try {
+            const data = await tallerService.getDashboard();
+            console.log("DATOS REALES DE TU API:", data); // REVISA LA CONSOLA F12
 
-                return {
-                    ...r,
-                    // Si el nombre sigue fallando, es probable que la propiedad se llame distinto en tu BD
-                    // Verifica si en tu tabla es 'nombre' o 'nombre_completo'
-                    nombre_render: cli.nombre || cli.nombre_cliente || 'Sin nombre',
-                    cedula_render: cli.cedula || 'S/N',
-                    marca_render: eq.marca || '---',
-                    modelo_render: eq.modelo || '---'
-                };
-            });
-            setReps(datosNormalizados);
+            if (Array.isArray(data)) {
+                const datosNormalizados = data.map(r => {
+                    // Buscamos el equipo en r.equipos o r.equipo
+                    const eq = r.equipos || r.equipo || {};
+                    
+                    // Buscamos el cliente en r.clientes, r.cliente o dentro del equipo
+                    const cli = r.clientes || r.cliente || eq.clientes || eq.cliente || {};
+
+                    return {
+                        ...r,
+                        // Buscamos el nombre en todas las variantes posibles que suelen enviar las APIs
+                        nombre_render: r.nombre_cliente || cli.nombre || r.cliente_nombre || 'Sin nombre',
+                        cedula_render: r.cedula_cliente || cli.cedula || r.cedula || 'S/N',
+                        marca_render: eq.marca || r.marca || '---',
+                        modelo_render: eq.modelo || r.modelo || '---'
+                    };
+                });
+                setReps(datosNormalizados);
+            }
+        } catch (error) { 
+            console.error("Error cargando dashboard:", error); 
         }
-    } catch (error) { 
-        console.error("Error cargando dashboard:", error); 
-    }
-};
+    };
 
     useEffect(() => { load(); }, []);
 
