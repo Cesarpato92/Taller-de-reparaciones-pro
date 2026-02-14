@@ -299,25 +299,41 @@ export default function Admin() {
 
     // --- 2. FILTRADO UTILIZANDO LAS NUEVAS PROPIEDADES ---
     const reparacionesFiltradas = useMemo(() => {
-        const search = filtro.toLowerCase();
-        return reps.filter(r => 
-            r.nombreCliente.toLowerCase().includes(search) || 
-            r.cedulaCliente.toLowerCase().includes(search) ||
-            r.marcaEquipo.toLowerCase().includes(search)
+    // Aseguramos que el término de búsqueda sea un string
+    const search = (filtro || '').toLowerCase();
+
+    return reps.filter(r => {
+        // Usamos las propiedades "_render" que creamos en la función load
+        // Agregamos || '' para que si el dato es null, no explote
+        const nombre = (r.nombre_render || '').toLowerCase();
+        const cedula = (r.cedula_render || '').toLowerCase();
+        const marca = (r.marca_render || '').toLowerCase();
+        const modelo = (r.modelo_render || '').toLowerCase();
+
+        return (
+            nombre.includes(search) || 
+            cedula.includes(search) ||
+            marca.includes(search) ||
+            modelo.includes(search)
         );
-    }, [reps, filtro]);
+    });
+}, [reps, filtro]);
 
     // --- 3. MANEJO DE ESTADO ---
     const handleEstado = async (id, nuevoEstado) => {
-        try {
-            const dataUpdate = { 
-                estado: nuevoEstado,
-                fecha_fin: nuevoEstado === 'Entregado' ? new Date().toISOString().split('T')[0] : null 
-            };
-            await tallerService.actualizarReparacion(id, dataUpdate);
-            await load(); 
-        } catch (error) { alert("Error al actualizar"); }
-    };
+    try {
+        const dataUpdate = { 
+            estado: nuevoEstado,
+            fecha_fin: nuevoEstado === 'Entregado' ? new Date().toISOString().split('T')[0] : null 
+        };
+        await tallerService.actualizarReparacion(id, dataUpdate);
+        // Volvemos a llamar a load() que ya tiene la lógica de nombres arreglada
+        await load(); 
+    } catch (error) { 
+        console.error("Error:", error);
+        alert("Error al actualizar"); 
+    }
+};
 
     return (
         <div className="p-4 bg-slate-50 min-h-screen">
@@ -386,6 +402,22 @@ export default function Admin() {
                                                     <EditableCosto id={r.id} valorInicial={r.costo_estimado} onSave={load} />
                                                 </td>
                                                 {/* ... resto de la fila (Estado) ... */}
+                                                <td className="p-4 text-center">
+                                                    <select 
+                                                        value={r.estado} 
+                                                        onChange={(e) => handleEstado(r.id, e.target.value)}
+                                                        className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-lg border-2 ${
+                                                            r.estado === 'Entregado' ? 'bg-green-100 text-green-700 border-green-200' : 
+                                                            r.estado === 'En Reparación' ? 'bg-blue-100 text-blue-700 border-blue-200' : 
+                                                            'bg-slate-100 text-slate-600 border-slate-200'
+                                                        }`}
+                                                    >
+                                                        <option value="Recibido">Recibido</option>
+                                                        <option value="En Reparación">En Reparación</option>
+                                                        <option value="Listo">Listo</option>
+                                                        <option value="Entregado">Entregado</option>
+                                                    </select>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
