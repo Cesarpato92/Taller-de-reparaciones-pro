@@ -269,32 +269,31 @@ export default function Admin() {
 
     // --- 1. CARGA Y LIMPIEZA PROFUNDA DE DATOS ---
     const load = async () => {
-        try {
-            const data = await tallerService.getDashboard();
-            if (Array.isArray(data)) {
-                // Mapeamos los datos para que sean consistentes e independientes
-                const datosNormalizados = data.map(r => {
-                    // Extraer equipo (probando todas las posibles llaves de Supabase)
-                    const eq = r.equipos || r['equipos!reparaciones_equipo_id_fkey'] || r['equipos!fk_equipo'] || {};
-                    
-                    // Extraer cliente desde el equipo
-                    const cli = eq.cliente || eq.clientes || eq['clientes!equipos_cliente_id_fkey'] || eq['clientes!fk_cliente'] || {};
-                    
-                    return {
-                        ...r,
-                        // Creamos propiedades "Aplanadas" para el renderizado seguro
-                        nombreCliente: cli.nombre || 'Sin Nombre',
-                        cedulaCliente: cli.cedula || '---',
-                        marcaEquipo: eq.marca || 'Genérico',
-                        modeloEquipo: eq.modelo || '',
-                    };
-                });
-                setReps(datosNormalizados);
-            }
-        } catch (error) { 
-            console.error("Error cargando dashboard:", error); 
+    try {
+        const data = await tallerService.getDashboard();
+        if (Array.isArray(data)) {
+            const datosNormalizados = data.map(r => {
+                // Buscamos el objeto equipo probando todas las variantes de nombre de Supabase
+                const eq = r.equipos || r['equipos!fk_equipo'] || r['equipos!reparaciones_equipo_id_fkey'] || {};
+                
+                // Buscamos el objeto cliente dentro del equipo
+                const cli = eq.clientes || eq['clientes!fk_cliente'] || eq['clientes!equipos_cliente_id_fkey'] || {};
+
+                return {
+                    ...r,
+                    // EXTRAEMOS LOS DATOS REALES A PROPIEDADES PLANAS
+                    nombre_render: cli.nombre || 'Sin nombre',
+                    cedula_render: cli.cedula || 'S/N',
+                    marca_render: eq.marca || '---',
+                    modelo_render: eq.modelo || '---'
+                };
+            });
+            setReps(datosNormalizados);
         }
-    };
+    } catch (error) { 
+        console.error("Error cargando dashboard:", error); 
+    }
+};
 
     useEffect(() => { load(); }, []);
 
@@ -366,14 +365,16 @@ export default function Admin() {
                                             <tr key={r.id} className="hover:bg-blue-50/50 transition-colors">
                                                 <td className="p-4">
                                                     <div className="flex flex-col">
-                                                        <span className="font-bold text-slate-900">{r.nombreCliente}</span>
+                                                        {/* USAMOS EL NOMBRE NORMALIZADO */}
+                                                        <span className="font-bold text-slate-900">{r.nombre_render}</span>
                                                         <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-2 py-0.5 rounded mt-1 w-fit">
-                                                            CC: {r.cedulaCliente}
+                                                            CC: {r.cedula_render}
                                                         </span>
                                                     </div>
                                                 </td>
                                                 <td className="p-4 font-medium text-slate-700">
-                                                    {r.marcaEquipo} <span className="text-slate-400">{r.modeloEquipo}</span>
+                                                    {/* USAMOS MARCA Y MODELO NORMALIZADOS */}
+                                                    {r.marca_render} <span className="text-slate-400">{r.modelo_render}</span>
                                                 </td>
                                                 <td className="p-4">
                                                     <div className="space-y-1">
@@ -384,18 +385,7 @@ export default function Admin() {
                                                 <td className="p-4 text-center">
                                                     <EditableCosto id={r.id} valorInicial={r.costo_estimado} onSave={load} />
                                                 </td>
-                                                <td className="p-4 text-center">
-                                                    <select 
-                                                        value={r.estado} 
-                                                        onChange={(e) => handleEstado(r.id, e.target.value)} 
-                                                        className={`text-[10px] font-black px-3 py-1 rounded-full outline-none cursor-pointer transition-colors ${r.estado === 'Entregado' ? 'bg-blue-600 text-white' : 'bg-amber-100 text-amber-700'}`}
-                                                    >
-                                                        <option value="Pendiente">PENDIENTE</option>
-                                                        <option value="En Proceso">EN PROCESO</option>
-                                                        <option value="Reparado">REPARADO</option>
-                                                        <option value="Entregado">ENTREGADO</option>
-                                                    </select>
-                                                </td>
+                                                {/* ... resto de la fila (Estado) ... */}
                                             </tr>
                                         ))}
                                     </tbody>
