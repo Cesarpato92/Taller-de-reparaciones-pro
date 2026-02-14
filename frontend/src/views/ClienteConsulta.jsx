@@ -12,11 +12,14 @@ export default function ClienteConsulta() {
         try {
             const data = await tallerService.getDashboard();
             
-            // 1. Filtrar por cédula (buscamos en la ruta de relación de tu DB)
+            // 1. Filtrar por cédula (estructura correcta según tu SQL)
             const filtrados = data.filter(r => {
-                const cedulaCliente = r.equipos?.clientes?.cedula || 
-                                     r['equipos!fk_equipo']?.['clientes!fk_cliente']?.cedula;
-                return cedulaCliente?.includes(query.trim());
+                // Acceso correcto a la cédula a través de la relación
+                const cedulaCliente = r.equipos?.clientes?.cedula;
+                
+                // Si no encuentra con la primera estructura, intenta con la alternativa
+                // pero según tu SQL, debería ser r.equipos.clientes.cedula
+                return cedulaCliente && cedulaCliente.toString().includes(query.trim());
             });
 
             // 2. Ordenar: Pendientes/En Proceso arriba, Entregados abajo
@@ -33,6 +36,15 @@ export default function ClienteConsulta() {
         }
     };
 
+    // Función para obtener datos del equipo de manera segura
+    const getEquipoData = (reparacion) => {
+        return {
+            marca: reparacion.equipos?.marca || 'Marca no disponible',
+            modelo: reparacion.equipos?.modelo || 'Modelo no disponible',
+            cliente: reparacion.equipos?.clientes || null
+        };
+    };
+
     return (
         <div className="max-w-2xl mx-auto py-10 px-4">
             <h2 className="text-2xl font-black mb-6 text-center text-slate-800">Rastreo de Equipos</h2>
@@ -43,6 +55,7 @@ export default function ClienteConsulta() {
                     placeholder="Ingresa tu número de cédula..." 
                     value={query}
                     onChange={e => setQuery(e.target.value)} 
+                    onKeyPress={(e) => e.key === 'Enter' && buscar()}
                 />
                 <button 
                     onClick={buscar} 
@@ -55,36 +68,55 @@ export default function ClienteConsulta() {
 
             <div className="space-y-4">
                 {resultados.length > 0 ? (
-                    resultados.map(res => (
-                        <div key={res.id} className={`p-6 rounded-3xl border shadow-lg transition-all ${res.estado === 'Entregado' ? 'bg-slate-50 opacity-75' : 'bg-white border-blue-100'}`}>
-                            <div className="flex justify-between items-start mb-4">
-                                <div>
-                                    <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${
-                                        res.estado === 'Entregado' ? 'bg-slate-200 text-slate-600' : 'bg-blue-100 text-blue-700'
-                                    }`}>
-                                        {res.estado}
-                                    </span>
-                                    <h3 className="text-xl font-black mt-2">
-                                        {(res.equipos?.marca || res['equipos!fk_equipo']?.marca)} {(res.equipos?.modelo || res['equipos!fk_equipo']?.modelo)}
-                                    </h3>
+                    resultados.map(res => {
+                        const equipo = getEquipoData(res);
+                        return (
+                            <div key={res.id} className={`p-6 rounded-3xl border shadow-lg transition-all ${res.estado === 'Entregado' ? 'bg-slate-50 opacity-75' : 'bg-white border-blue-100'}`}>
+                                <div className="flex justify-between items-start mb-4">
+                                    <div>
+                                        <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${
+                                            res.estado === 'Entregado' ? 'bg-slate-200 text-slate-600' : 
+                                            res.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-700' :
+                                            res.estado === 'En Proceso' ? 'bg-blue-100 text-blue-700' :
+                                            'bg-green-100 text-green-700'
+                                        }`}>
+                                            {res.estado}
+                                        </span>
+                                        <h3 className="text-xl font-black mt-2">
+                                            {equipo.marca} {equipo.modelo}
+                                        </h3>
+                                        {equipo.cliente && (
+                                            <p className="text-sm text-slate-500 mt-1">
+                                                Cliente: {equipo.cliente.nombre} - {equipo.cliente.telefono}
+                                            </p>
+                                        )}
+                                    </div>
+                                    <p className="text-blue-600 font-bold text-lg">${Number(res.costo_estimado).toLocaleString()}</p>
                                 </div>
-                                <p className="text-blue-600 font-bold text-lg">${res.costo_estimado}</p>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <p className="text-slate-500 text-sm">
-                                    <span className="font-bold text-slate-700">Falla reportada:</span> {res.descripcion_falla}
-                                </p>
-                                {res.diagnostico_tecnico && (
-                                    <p className="text-slate-600 text-sm bg-blue-50 p-3 rounded-lg border border-blue-100">
-                                        <span className="font-bold text-blue-800">Diagnóstico Técnico:</span> {res.diagnostico_tecnico}
+                                
+                                <div className="space-y-2">
+                                    <p className="text-slate-500 text-sm">
+                                        <span className="font-bold text-slate-700">Falla reportada:</span> {res.descripcion_falla || 'No especificada'}
                                     </p>
-                                )}
+                                    {res.diagnostico_tecnico && (
+                                        <p className="text-slate-600 text-sm bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                            <span className="font-bold text-blue-800">Diagnóstico Técnico:</span> {res.diagnostico_tecnico}
+                                        </p>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        );
+                    })
                 ) : (
-                    query && !buscando && <p className="text-center text-slate-400 italic">No se encontraron equipos asociados a esa cédula.</p>
+                    query && !buscando ? (
+                        <p className="text-center text-slate-400 italic">
+                            No se encontraron equipos asociados a la cédula: <span className="font-bold text-slate-600">{query}</span>
+                        </p>
+                    ) : (
+                        <p className="text-center text-slate-400 italic">
+                            Ingresa tu cédula para consultar el estado de tus equipos
+                        </p>
+                    )
                 )}
             </div>
         </div>
