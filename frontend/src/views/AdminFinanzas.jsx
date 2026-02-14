@@ -4,13 +4,13 @@ export default function AdminFinanzas({ reparaciones = [] }) {
     const [fechaInicio, setFechaInicio] = useState('');
     const [fechaFin, setFechaFin] = useState('');
 
-    const { finanzas, totalFiltrado, maxMonto } = useMemo(() => {
+    const { finanzas, totalGeneral, maxMonto } = useMemo(() => {
         const porDia = {};
         let acumulado = 0;
         let max = 0;
 
-        // Solo procesamos reparaciones "Entregado"
-        const entregadas = reparaciones.filter(r => r.estado === 'Entregado');
+        // Filtramos solo los ENTREGADOS para las finanzas
+        const entregadas = reparaciones.filter(r => r.estado?.toUpperCase() === 'ENTREGADO');
 
         entregadas.forEach(r => {
             const rawDate = r.fecha_inicio || r.created_at; 
@@ -22,100 +22,87 @@ export default function AdminFinanzas({ reparaciones = [] }) {
 
             if (cumpleInicio && cumpleFin) {
                 const monto = Number(r.costo_estimado) || 0;
-                const [y, m, d] = fechaISO.split('-');
-                const fechaLabel = `${d}/${m}/${y}`;
-                
-                porDia[fechaLabel] = (porDia[fechaLabel] || 0) + monto;
+                porDia[fechaISO] = (porDia[fechaISO] || 0) + monto;
                 acumulado += monto;
             }
         });
 
-        // Calculamos el máximo después de agrupar para la escala del gráfico
         Object.values(porDia).forEach(m => { if (m > max) max = m; });
 
-        // Orden cronológico (importante para el gráfico)
-        const listaOrdenada = Object.entries(porDia).sort((a, b) => {
-            const [dA, mA, yA] = a[0].split('/');
-            const [dB, mB, yB] = b[0].split('/');
-            return new Date(yA, mA - 1, dA) - new Date(yB, mB - 1, dB);
-        });
+        const listaOrdenada = Object.entries(porDia).sort((a, b) => a[0].localeCompare(b[0]));
 
         return { 
             finanzas: listaOrdenada, 
-            totalFiltrado: acumulado, 
-            maxMonto: max || 1 // Evitar división por cero
+            totalGeneral: acumulado, 
+            maxMonto: max || 1 
         };
     }, [reparaciones, fechaInicio, fechaFin]);
 
     return (
-        <div className="space-y-6 pb-10">
-            {/* ... Aquí van tus Filtros y el Header del Total ... */}
+        <div className="w-full max-w-5xl mx-auto space-y-4 p-4">
+            
+            {/* 1. BANNER AZUL (El que ya tienes en la foto) */}
+            <div className="bg-blue-600 p-10 rounded-[40px] border-[3px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center relative overflow-hidden">
+                <span className="text-white font-black uppercase tracking-[0.2em] text-xs mb-2 opacity-80">Total General en Caja</span>
+                <h2 className="text-white text-7xl font-black tracking-tighter">${totalGeneral.toLocaleString()}</h2>
+                <div className="absolute right-8 bottom-0 text-white/20 text-9xl font-black select-none">$$</div>
+            </div>
 
-            {/* SECCIÓN DEL GRÁFICO CORREGIDA */}
-            {finanzas.length > 0 ? (
-                <div className="bg-white p-6 rounded-3xl border-2 border-slate-900 shadow-sm">
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase mb-10 tracking-widest">
-                        Tendencia de Ingresos
-                    </h3>
-                    
-                    {/* Contenedor con altura fija obligatoria */}
-                    <div className="relative h-[250px] w-full flex items-end gap-2 px-2 border-b-2 border-slate-100">
+            {/* 2. EL GRÁFICO (Nuevo: Insertado entre el banner y la tabla) */}
+            {finanzas.length > 0 && (
+                <div className="bg-white p-6 rounded-[30px] border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="flex items-end justify-around h-40 gap-2 px-4">
                         {finanzas.map(([fecha, monto]) => {
-                            // Cálculo del porcentaje de altura
-                            const alturaPorcentaje = (monto / maxMonto) * 100;
-                            
+                            const porcentaje = (monto / maxMonto) * 100;
+                            const [y, m, d] = fecha.split('-');
                             return (
                                 <div key={fecha} className="flex-1 flex flex-col items-center group relative h-full justify-end">
-                                    {/* Etiqueta flotante al hacer hover */}
-                                    <div className="absolute -top-8 hidden group-hover:block bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded z-20 whitespace-nowrap">
+                                    {/* Etiqueta flotante */}
+                                    <div className="absolute -top-8 hidden group-hover:block bg-black text-white text-[10px] font-bold px-2 py-1 rounded">
                                         ${monto.toLocaleString()}
                                     </div>
-                                    
-                                    {/* La Barra */}
+                                    {/* Barra */}
                                     <div 
-                                        className="w-full min-w-[15px] bg-blue-500 rounded-t-md transition-all duration-500 hover:bg-blue-600 cursor-help"
-                                        style={{ height: `${alturaPorcentaje}%` }}
+                                        className="w-full max-w-[40px] bg-blue-500 border-2 border-black rounded-t-lg transition-all hover:bg-blue-400"
+                                        style={{ height: `${porcentaje}%` }}
                                     ></div>
-                                    
-                                    {/* Fecha debajo de la barra */}
-                                    <span className="absolute -bottom-7 text-[9px] font-black text-slate-400 whitespace-nowrap rotate-45 sm:rotate-0">
-                                        {fecha.split('/')[0]}/{fecha.split('/')[1]}
-                                    </span>
+                                    {/* Fecha corta */}
+                                    <span className="text-[10px] font-bold text-slate-500 mt-2">{d}/{m}</span>
                                 </div>
                             );
                         })}
                     </div>
-                    {/* Espaciador inferior para las fechas rotadas */}
-                    <div className="h-8"></div>
-                </div>
-            ) : (
-                <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-3xl p-10 text-center text-slate-400 italic">
-                    No hay suficientes datos para generar el gráfico
                 </div>
             )}
 
-            
-
-            {/* TABLA DE RESULTADOS (Mostrando lo más reciente primero) */}
-            <div className="bg-white border-2 border-slate-900 rounded-3xl overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-slate-50 border-b-2 border-slate-900">
-                        <tr>
-                            <th className="p-5 text-[10px] font-bold text-slate-400 uppercase">Fecha</th>
-                            <th className="p-5 text-right text-[10px] font-bold text-slate-400 uppercase">Ganancia</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y-2 divide-slate-900">
-                        {[...finanzas].reverse().map(([fecha, monto]) => (
-                            <tr key={fecha} className="hover:bg-slate-50 transition-colors">
-                                <td className="p-5 font-black text-slate-700">{fecha}</td>
-                                <td className="p-5 text-right font-black text-blue-600 text-xl">
+            {/* 3. TABLA DE CIERRES (La que aparece en tu imagen 11c8c7.png) */}
+            <div className="bg-[#0f172a] rounded-[30px] border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+                <div className="grid grid-cols-3 p-4 border-b border-white/10 text-[10px] font-black text-blue-400 uppercase tracking-widest text-center">
+                    <div>Fecha de Cierre</div>
+                    <div>Cant. Entregas</div>
+                    <div>Total Recaudado</div>
+                </div>
+                <div className="divide-y divide-white/5">
+                    {[...finanzas].reverse().map(([fecha, monto]) => {
+                        const [y, m, d] = fecha.split('-');
+                        return (
+                            <div key={fecha} className="grid grid-cols-3 p-6 items-center text-center group hover:bg-white/5 transition-colors">
+                                <div className="flex items-center justify-center gap-3">
+                                    <div className="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
+                                    <span className="text-white font-bold">{d}/{m}/{y}</span>
+                                </div>
+                                <div>
+                                    <span className="bg-white/10 text-white text-[10px] px-3 py-1 rounded-full border border-white/20">
+                                        Check
+                                    </span>
+                                </div>
+                                <div className="text-white text-xl font-black">
                                     ${monto.toLocaleString()}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
