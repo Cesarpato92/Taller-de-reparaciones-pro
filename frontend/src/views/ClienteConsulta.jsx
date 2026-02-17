@@ -11,17 +11,17 @@ export default function ClienteConsulta() {
         setBuscando(true);
         try {
             const data = await tallerService.getDashboard();
-            
+
             // 1. FILTRADO CORREGIDO
             const filtrados = data.filter(r => {
                 // Acceso según tu alias de servidor: r.equipos.cliente
                 const eq = r.equipos || {};
                 const cli = eq.cliente || {}; // Cambiado de 'clientes' a 'cliente'
-                
+
                 const cedulaCliente = cli.cedula;
-                
-                // Comparación exacta o parcial de la cédula
-                return cedulaCliente && cedulaCliente.toString().includes(query.trim());
+
+                // Comparación EXACTA de la cédula (no parcial)
+                return cedulaCliente && cedulaCliente.toString().trim() === query.trim();
             });
 
             // 2. ORDENAR
@@ -51,17 +51,17 @@ export default function ClienteConsulta() {
     return (
         <div className="max-w-2xl mx-auto py-10 px-4">
             <h2 className="text-2xl font-black mb-6 text-center text-slate-800">Rastreo de Equipos</h2>
-            
+
             <div className="flex gap-2 mb-8">
-                <input 
-                    className="flex-1 p-3 rounded-xl border shadow-sm focus:ring-2 focus:ring-blue-500 outline-none" 
-                    placeholder="Ingresa tu número de cédula..." 
+                <input
+                    className="flex-1 p-3 rounded-xl border shadow-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Ingresa tu número de cédula..."
                     value={query}
-                    onChange={e => setQuery(e.target.value)} 
+                    onChange={e => setQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && buscar()}
                 />
-                <button 
-                    onClick={buscar} 
+                <button
+                    onClick={buscar}
                     disabled={buscando}
                     className="bg-blue-600 hover:bg-blue-700 text-white px-6 rounded-xl font-bold transition-colors disabled:bg-slate-400"
                 >
@@ -77,12 +77,11 @@ export default function ClienteConsulta() {
                             <div key={res.id} className={`p-6 rounded-3xl border shadow-lg transition-all ${res.estado === 'Entregado' ? 'bg-slate-50 opacity-75' : 'bg-white border-blue-100'}`}>
                                 <div className="flex justify-between items-start mb-4">
                                     <div>
-                                        <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${
-                                            res.estado === 'Entregado' ? 'bg-slate-200 text-slate-600' : 
-                                            res.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-700' :
-                                            res.estado === 'En Reparación' ? 'bg-blue-100 text-blue-700' :
-                                            'bg-green-100 text-green-700'
-                                        }`}>
+                                        <span className={`text-[10px] font-black px-3 py-1 rounded-full uppercase ${res.estado === 'Entregado' ? 'bg-slate-200 text-slate-600' :
+                                                res.estado === 'Pendiente' ? 'bg-yellow-100 text-yellow-700' :
+                                                    res.estado === 'En Reparación' ? 'bg-blue-100 text-blue-700' :
+                                                        'bg-green-100 text-green-700'
+                                            }`}>
                                             {res.estado}
                                         </span>
                                         <h3 className="text-xl font-black mt-2">
@@ -96,7 +95,7 @@ export default function ClienteConsulta() {
                                     </div>
                                     <p className="text-blue-600 font-bold text-lg">${Number(res.costo_estimado).toLocaleString()}</p>
                                 </div>
-                                
+
                                 <div className="space-y-2">
                                     <p className="text-slate-500 text-sm">
                                         <span className="font-bold text-slate-700">Falla reportada:</span> {res.descripcion_falla || 'No especificada'}
