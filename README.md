@@ -4,30 +4,30 @@
 
 ## 🌟 Propuesta de Valor
 
-- **Gestión Operativa de Alto Rendimiento**: Ciclo de vida completo de reparaciones con estados sincronizados y diagnósticos técnicos editables.
-- **Inteligencia Financiera**: Módulo administrativo dedicado para el análisis de márgenes, monitoreo de rendimiento diario y reportes históricos detallados.
+- **Gestión Operativa de Alto Rendimiento**: Ciclo de vida completo de reparaciones con estados sincronizados, diagnósticos técnicos editables y registro automático de fechas de entrega.
+- **Inteligencia Financiera Avanzada**: Módulo administrativo con gráficos de rendimiento y reportes diarios **expandibles** para un desglose detallado de equipos y ganancias por jornada.
 - **Búsqueda y Recuperación de Datos**: Infraestructura de filtrado de alta velocidad para la localización instantánea de registros por cliente, identificación o equipo.
-- **Documentación Automatizada**: Generación dinámica de comprobantes de servicio en formato PDF, garantizando trazabilidad y profesionalismo.
-- **Interfaz de Usuario de Grado Profesional**: Layout optimizado para alta productividad, con una estética contemporánea, sombras suaves y aprovechamiento total del ancho de pantalla.
+- **Documentación Automatizada**: Generación dinámica de comprobantes de servicio en formato PDF para garantizar trazabilidad y profesionalismo.
+- **Interfaz de Usuario de Grado Profesional**: Layout optimizado con estética contemporánea, sombras suaves, bordes finos y aprovechamiento total del ancho de pantalla.
 
 ## 🛠️ Stack Tecnológico
 
 ### Arquitectura de Frontend
 - **React 19 & Vite**: Motor principal para una interfaz reactiva y tiempos de carga ultrarrápidos.
-- **Tailwind CSS**: Framework de diseño para una consistencia visual escalable.
-- **Recharts**: Visualización analítica de métricas financieras.
+- **Tailwind CSS**: Framework de diseño para una consistencia visual escalable y moderna.
+- **Recharts & Custom SVG**: Visualización analítica de métricas financieras.
 - **jsPDF Support**: Sistema integrado para la exportación de documentos oficiales.
 
 ### Infraestructura Backend
-- **Node.js & Express**: API REST escalable para el procesamiento de lógica de negocio.
-- **Supabase (PostgreSQL)**: Arquitectura de base de datos relacional con seguridad de grado empresarial.
-- **CORS & Environment Management**: Protocolos de seguridad y gestión de variables de entorno.
+- **Node.js & Express**: API REST escalable con manejo robusto de errores y transacciones atómicas.
+- **Supabase (PostgreSQL)**: Arquitectura de base de datos relacional con seguridad y persistencia en la nube.
+- **Environment Management**: Gestión segura de variables de entorno para una configuración flexible.
 
 ## 📦 Despliegue y Configuración
 
 ### Prerrequisitos
 - **Node.js**: Entorno de ejecución (v18.x recomendado).
-- **Supabase Account**: Para la persistencia de datos y autenticación.
+- **Supabase Account**: Para la persistencia de datos.
 
 ### 1. Inicialización del Repositorio
 ```bash
@@ -44,9 +44,9 @@ Configure las variables de entorno en un archivo `.env`:
 ```env
 SUPABASE_URL=tu_endpoint_url
 SUPABASE_KEY=tu_api_key_autenticada
-PORT=5000
+PORT=10000
 ```
-Ejecución en modo desarrollo:
+Ejecución:
 ```bash
 npm run dev
 ```
@@ -55,11 +55,18 @@ npm run dev
 ```bash
 cd ../frontend
 npm install
+```
+Asegure que el archivo `.env` apunte al puerto correcto:
+```env
+VITE_API_URL=http://localhost:10000/api
+```
+Ejecución:
+```bash
 npm run dev
 ```
 
-## � Estándares de Diseño
-El sistema implementa un **Layout Balanceado** con márgenes de seguridad de 30px y una separación modular de 20px, asegurando una experiencia de usuario ergonómica y visualmente descansada para entornos de uso intensivo.
+## 📐 Estándares de Diseño
+El sistema implementa un **Layout de Grado Empresarial** con márgenes de seguridad de 30px y una separación modular de 20px, asegurando una experiencia de usuario ergonómica y profesional.
 
 ## 👥 Desarrollo y Autoría
 - **Cesar Patiño** - *Arquitectura y Desarrollo Principal*

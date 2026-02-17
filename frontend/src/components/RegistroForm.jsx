@@ -2,13 +2,18 @@ import { useState } from 'react';
 import { tallerService } from '../api/tallerService';
 import { generarRecibo } from '../services/pdfGenerator';
 
+/** 
+ * COMPONENTE DE REGISTRO
+ * Maneja el formulario de ingreso de equipos. 
+ * Realiza una validación básica y envía los datos al backend en una sola transacción.
+ */
 export default function RegistroForm({ onRefresh }) {
     // 1. Agregamos cedula y email al estado inicial
     const [f, setF] = useState({
         nombre: '',
-        cedula: '',   // <--- Agregado
+        cedula: '',
         telefono: '',
-        email: '',    // <--- Agregado
+        email: '',
         tipo: 'Celular',
         marca: '',
         modelo: '',

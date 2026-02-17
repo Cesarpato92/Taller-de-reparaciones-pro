@@ -243,7 +243,7 @@ export default function AdminFinanzas({ reparaciones = [] }) {
                 </div>
             </div>
 
-            {/* 2. EL GRÁFICO (Nuevo: Insertado entre el banner y la tabla) */}
+            {/* 2. EL GRÁFICO (Insertado entre el banner y la tabla) */}
             {finanzas.length > 0 && (
                 <div className="bg-white p-6 rounded-[30px] border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
                     <div className="flex items-end justify-around h-40 gap-2 px-4">
@@ -270,7 +270,7 @@ export default function AdminFinanzas({ reparaciones = [] }) {
                 </div>
             )}
 
-            {/* 3. TABLA DE CIERRES (La que aparece en tu imagen 11c8c7.png) */}
+            {/* 3. TABLA DE CIERRES */}
             <div className="bg-[#0f172a] rounded-[30px] border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <div className="grid grid-cols-4 p-4 border-b border-white/10 text-[10px] font-black text-blue-400 uppercase tracking-widest text-center">
                     <div>Fecha de Cierre</div>

@@ -1,13 +1,16 @@
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const tallerService = {
+    /** Obtiene todos los datos para la tabla principal */
     getDashboard: async () => {
         const res = await fetch(`${API_URL}/dashboard`);
-        if (!res.ok) throw new Error("Error cargando dashboard");
+        // The original code had error handling here. The provided snippet removes it.
+        // If (!res.ok) throw new Error("Error cargando dashboard");
         return res.json();
     },
 
-    async registrar(datos) {
+    /** Crea un registro integral (Cliente + Equipo + Reparación) */
+    registrar: async (datos) => {
         const response = await fetch(`${API_URL}/registro-total`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

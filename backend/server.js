@@ -87,35 +87,36 @@ app.put('/api/reparaciones/:id', async (req, res) => {
         if (error) return res.status(400).json({ error: error.message });
         res.json(data);
     } catch (err) {
+        console.error("❌ ERROR EN /api/reparaciones/:id (PUT):", err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 3. ELIMINAR
+/**
+ * ELIMINAR REGISTRO: Elimina una reparación por su ID.
+ * Se realiza una limpieza del ID para asegurar la consistencia.
+ */
 app.delete('/api/reparaciones/:id', async (req, res) => {
     const { id } = req.params;
     const cleanId = id.trim();
-    console.log(`🗑️ Solicitud de ELIMINAR para ID: [${cleanId}]`);
     try {
         const { data, error } = await supabase
             .from('reparaciones')
             .delete()
             .eq('id', cleanId);
 
-        if (error) {
-            console.error("❌ Error de Supabase al eliminar:", error.message);
-            return res.status(400).json({ error: error.message });
-        }
-        console.log("✅ Eliminación exitosa en Supabase");
+        if (error) return res.status(400).json({ error: error.message });
         res.json({ success: true, data });
     } catch (err) {
-        console.error("💥 Error interno en DELETE:", err.message);
+        console.error("❌ ERROR EN /api/reparaciones/:id (DELETE):", err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 4. NUEVA RUTA: FINANZAS AGRUPADAS POR DÍA
-// Esta ruta resuelve el problema de que no veías todos los días
+/**
+ * FINANZAS DIARIAS: Calcula el total recaudado por día para reparaciones 'Entregado'.
+ * Agrupa manualmente los datos para evitar problemas de zona horaria y asegurar precisión.
+ */
 app.get('/api/finanzas/diarias', async (req, res) => {
     try {
         const { data, error } = await supabase
@@ -151,49 +152,62 @@ app.get('/api/finanzas/diarias', async (req, res) => {
 
         res.json(resultado);
     } catch (err) {
+        console.error("❌ ERROR EN /api/finanzas/diarias:", err.message);
         res.status(500).json({ error: err.message });
     }
 });
 
-// 4. REGISTRO TOTAL (Corregido para evitar desfase de fecha)
+/** 
+ * REGISTRO INTEGRAL: Maneja la creación en cascada (Cliente -> Equipo -> Reparación).
+ * Incluye lógica para buscar/crear cliente, insertar equipo y luego la reparación.
+ * Normaliza la fecha local para evitar desfases de zona horaria en el registro.
+ */
 app.post('/api/registro-total', async (req, res) => {
     const datos = req.body;
     try {
+        // Sanitización y normalización de datos de entrada
         const cedulaS = String(datos.cedula || '').trim();
         const nombreS = String(datos.nombre || '').trim();
         const telefonoS = String(datos.telefono || '').trim();
         const emailS = String(datos.email || datos.correo || '').toLowerCase().trim();
         const costoSeguro = parseFloat(datos.costo_estimado || datos.costo || 0);
-        // Aceptamos ambos nombres: 'precio_repuesto' o 'costo_repuesto' por compatibilidad
         const precioRepuesto = parseFloat(datos.precio_repuesto || datos.costo_repuesto || datos.precio || 0);
 
         if (!cedulaS) throw new Error("La cédula es obligatoria");
 
-        // Gestión de Cliente
+        // 1. Gestión de Cliente (Busca existente o crea uno nuevo)
         let clienteFinal;
-        const { data: clienteExistente } = await supabase
+        const { data: clienteExistente, error: errorBusqueda } = await supabase
             .from('clientes')
             .select('*')
             .eq('cedula', cedulaS)
             .maybeSingle();
 
+        if (errorBusqueda) throw errorBusqueda;
+
         if (clienteExistente) {
-            const { data: cUpd } = await supabase
+            // Actualiza datos del cliente si ya existe
+            const { data: cUpd, error: errorUpdate } = await supabase
                 .from('clientes')
                 .update({ nombre: nombreS, telefono: telefonoS, email: emailS })
                 .eq('id', clienteExistente.id)
                 .select().single();
+            if (errorUpdate) throw errorUpdate;
             clienteFinal = cUpd;
         } else {
-            const { data: cNew } = await supabase
+            // Crea un nuevo cliente
+            const { data: cNew, error: errorInsertCli } = await supabase
                 .from('clientes')
                 .insert([{ cedula: cedulaS, nombre: nombreS, telefono: telefonoS, email: emailS }])
                 .select().single();
+            if (errorInsertCli) throw errorInsertCli;
             clienteFinal = cNew;
         }
 
-        // Insertar Equipo
-        const { data: nEquipo } = await supabase
+        if (!clienteFinal) throw new Error("Error al gestionar el cliente.");
+
+        // 2. Insertar Equipo asociado al cliente
+        const { data: nEquipo, error: errorInsertEq } = await supabase
             .from('equipos')
             .insert([{
                 tipo: datos.tipo_dispositivo || datos.tipo || 'Otro',
@@ -203,32 +217,34 @@ app.post('/api/registro-total', async (req, res) => {
             }])
             .select().single();
 
+        if (errorInsertEq) throw errorInsertEq;
+        if (!nEquipo) throw new Error("Error al registrar el equipo.");
+
         // --- CORRECCIÓN DE FECHA ---
-        // Usamos YYYY-MM-DD local para que no se salte al día siguiente por UTC
         const hoy = new Date();
         const fechaLocal = hoy.getFullYear() + '-' +
             String(hoy.getMonth() + 1).padStart(2, '0') + '-' +
             String(hoy.getDate()).padStart(2, '0');
 
-        // Insertar Reparación
-        const { data: nRep, error: e3 } = await supabase
+        // 3. Insertar Reparación vinculada al equipo
+        const { data: nRep, error: errorInsertRep } = await supabase
             .from('reparaciones')
             .insert([{
-                descripcion_falla: String(datos.descripcion_falla || 'Sin descripción').trim(),
+                descripcion_falla: String(datos.descripcion_falla || datos.falla || 'Sin descripción').trim(),
                 costo_estimado: costoSeguro,
                 precio_repuesto: precioRepuesto,
-                estado: 'Pendiente',
+                estado: datos.estado || 'Pendiente',
                 equipo_id: nEquipo.id,
-                fecha_inicio: fechaLocal // Ahora se guarda el día real del registro
+                fecha_inicio: fechaLocal
             }])
             .select().single();
 
-        if (e3) throw e3;
+        if (errorInsertRep) throw errorInsertRep;
 
         res.json({ success: true, data: nRep });
 
     } catch (err) {
-        console.error("❌ ERROR:", err.message);
+        console.error("❌ ERROR EN /api/registro-total:", err.message);
         res.status(400).json({ error: err.message });
     }
 });

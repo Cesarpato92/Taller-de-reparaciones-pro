@@ -5,12 +5,20 @@ import DashboardResumenHoy from '../components/DashboardResumenHoy';
 import SeccionFinanzas from '../components/SeccionFinanzas';
 import { EditableDiagnostico, EditableCosto, EditableRepuesto } from '../components/EditableCells';
 
+/** 
+ * VISTA ADMINISTRATIVA PRINCIPAL
+ * Orquesta la gestión del taller, el filtrado de registros y la navegación hacia finanzas.
+ */
 export default function Admin() {
     const [reps, setReps] = useState([]);
     const [filtro, setFiltro] = useState('');
     const [pestana, setPestana] = useState('taller');
 
-    // --- 1. CARGA Y LIMPIEZA PROFUNDA DE DATOS ---
+    /** 
+     * CARGA Y NORMALIZACIÓN DE DATOS
+     * Se procesa la respuesta del backend para aplanar las relaciones (cliente y equipo)
+     * facilitando el renderizado y el filtrado instantáneo.
+     */
     const load = async () => {
         try {
             const res = await tallerService.getDashboard();
@@ -36,7 +44,11 @@ export default function Admin() {
 
     useEffect(() => { load(); }, []);
 
-    // --- 2. FILTRADO ---
+    /** 
+     * FILTRADO EN TIEMPO REAL
+     * Utiliza useMemo para optimizar el rendimiento al buscar entre grandes volúmenes de datos.
+     * Busca coincidencias en nombre, cédula, marca y modelo.
+     */
     const reparacionesFiltradas = useMemo(() => {
         const search = (filtro || '').toLowerCase().trim();
         if (!search) return reps;
@@ -60,9 +72,14 @@ export default function Admin() {
     const handleEstado = async (id, nuevoEstado) => {
         try {
             if (!id) return alert("ID de reparación no encontrado");
+            const hoy = new Date();
+            const fechaLocal = hoy.getFullYear() + '-' +
+                String(hoy.getMonth() + 1).padStart(2, '0') + '-' +
+                String(hoy.getDate()).padStart(2, '0');
+
             const dataUpdate = {
                 estado: nuevoEstado,
-                fecha_fin: nuevoEstado === 'Entregado' ? new Date().toISOString().split('T')[0] : null
+                fecha_fin: nuevoEstado === 'Entregado' ? fechaLocal : null
             };
             await tallerService.actualizarReparacion(id, dataUpdate);
             await load();

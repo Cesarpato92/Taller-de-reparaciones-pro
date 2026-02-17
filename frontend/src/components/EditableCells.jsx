@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { tallerService } from '../api/tallerService';
 
+/** 
+ * COMPONENTES DE CELDAS EDITABLES
+ * Permiten la edición rápida de diagnóstico, costos y repuestos directamente 
+ * desde la tabla sin necesidad de abrir formularios adicionales.
+ */
 export function EditableDiagnostico({ id, valorInicial, onSave }) {
     const [editando, setEditando] = useState(false);
     const [texto, setTexto] = useState(valorInicial || '');

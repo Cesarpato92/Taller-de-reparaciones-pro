@@ -1,11 +1,17 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { tallerService } from '../api/tallerService';
 
+/** 
+ * MÓDULO DE FINANZAS
+ * Proporciona análisis detallado de ingresos, gráficos de rendimiento y reportes diarios.
+ * Permite filtrar por rangos de fecha y visualizar ganancias netas.
+ */
 export default function SeccionFinanzas({ reparaciones, load }) {
     const [fechaInicio, setFechaInicio] = useState('');
     const [fechaFin, setFechaFin] = useState('');
     const [modoHistorico, setModoHistorico] = useState(true);
     const [tooltipData, setTooltipData] = useState(null);
+    const [diaExpandido, setDiaExpandido] = useState(null); // Nuevo estado para expansión
 
     const { reporteDiario, totalFiltrado } = useMemo(() => {
         const datosAgrupados = {};
@@ -29,12 +35,19 @@ export default function SeccionFinanzas({ reparaciones, load }) {
                     const fLabel = `${d}/${m}/${y}`;
 
                     if (!datosAgrupados[fLabel]) {
-                        datosAgrupados[fLabel] = { monto: 0, cantidad: 0, repuestos: 0 };
+                        datosAgrupados[fLabel] = { monto: 0, cantidad: 0, repuestos: 0, reparaciones: [] };
                     }
 
                     datosAgrupados[fLabel].monto += monto;
                     datosAgrupados[fLabel].repuestos += precioRepuesto;
                     datosAgrupados[fLabel].cantidad += 1;
+                    datosAgrupados[fLabel].reparaciones.push({
+                        id: r.id,
+                        cliente: r.nombre_render || 'Sin nombre',
+                        equipo: `${r.marca_render} ${r.modelo_render}`,
+                        costo: monto,
+                        ganancia: monto - precioRepuesto
+                    });
                     acumulado += (monto - precioRepuesto);
                 }
             }
@@ -257,55 +270,69 @@ export default function SeccionFinanzas({ reparaciones, load }) {
                                 <th className="p-6 text-center tracking-widest">Cant. Entregas</th>
                                 <th className="p-6 text-right tracking-widest">Precio Repuestos</th>
                                 <th className="p-6 text-right tracking-widest">Total Recaudado</th>
-                                <th className="p-6 text-center tracking-widest">Acciones</th>
+                                <th className="p-6 text-center tracking-widest">Detalles</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y-2 divide-slate-100">
                             {reporteDiario.length > 0 ? (
                                 reporteDiario.map(([fecha, info]) => (
-                                    <tr key={fecha} className="hover:bg-blue-50/50 transition-colors">
-                                        <td className="p-6">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                                <span className="font-bold text-slate-700">{fecha}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-6 text-center">
-                                            <span className="bg-slate-100 text-slate-900 px-3 py-1 rounded-full font-black text-xs border border-slate-200">
-                                                {info.cantidad} {info.cantidad === 1 ? 'equipo' : 'equipos'}
-                                            </span>
-                                        </td>
-                                        <td className="p-6 text-right font-black text-amber-600 text-lg">
-                                            ${info.repuestos.toLocaleString('es-CO')}
-                                        </td>
-                                        <td className="p-6 text-right font-black text-slate-900 text-xl">
-                                            ${info.monto.toLocaleString('es-CO')}
-                                        </td>
-                                        <td className="p-6 text-center">
-                                            <button
-                                                onClick={() => {
-                                                    if (window.confirm(`¿Eliminar todos los registros del día ${fecha}?`)) {
-                                                        const reparacionesDelDia = reparaciones.filter(r => {
-                                                            const rawDate = r.fecha_fin || r.fecha_inicio || r.created_at;
-                                                            const f = String(rawDate).substring(0, 10).replace(/\//g, '-');
-                                                            const [y, m, d] = f.split('-');
-                                                            return `${d}/${m}/${y}` === fecha;
-                                                        });
-
-                                                        Promise.all(reparacionesDelDia.map(r => tallerService.eliminarReparacion(r.id)))
-                                                            .then(() => load())
-                                                            .catch(err => {
-                                                                console.error("Error al eliminar registros del día:", err);
-                                                                alert(`Error al eliminar día: ${err.message}`);
-                                                            });
-                                                    }
-                                                }}
-                                                className="text-red-400 hover:text-red-600 font-bold text-[10px] uppercase"
-                                            >
-                                                ELIMINAR DÍA
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    <React.Fragment key={fecha}>
+                                        <tr className={`hover:bg-blue-50/50 transition-colors ${diaExpandido === fecha ? 'bg-blue-50' : ''}`}>
+                                            <td className="p-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                                    <span className="font-bold text-slate-700">{fecha}</span>
+                                                </div>
+                                            </td>
+                                            <td className="p-6 text-center">
+                                                <span className="bg-slate-100 text-slate-900 px-3 py-1 rounded-full font-black text-xs border border-slate-200">
+                                                    {info.cantidad} {info.cantidad === 1 ? 'equipo' : 'equipos'}
+                                                </span>
+                                            </td>
+                                            <td className="p-6 text-right font-black text-amber-600 text-lg">
+                                                ${info.repuestos.toLocaleString('es-CO')}
+                                            </td>
+                                            <td className="p-6 text-right font-black text-slate-900 text-xl">
+                                                ${info.monto.toLocaleString('es-CO')}
+                                            </td>
+                                            <td className="p-6 text-center">
+                                                <button
+                                                    onClick={() => setDiaExpandido(diaExpandido === fecha ? null : fecha)}
+                                                    className={`p-2 rounded-lg transition-all ${diaExpandido === fecha ? 'bg-blue-600 text-white rotate-180' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                                                >
+                                                    {diaExpandido === fecha ? '▲' : '▼'}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {diaExpandido === fecha && (
+                                            <tr className="bg-slate-50/50">
+                                                <td colSpan="5" className="p-0 border-b-2 border-slate-200">
+                                                    <div className="p-6 animate-in slide-in-from-top-2 duration-300">
+                                                        <table className="w-full text-left text-[11px] rounded-xl overflow-hidden border border-slate-200 bg-white shadow-inner">
+                                                            <thead className="bg-slate-100 text-slate-500 font-bold uppercase text-[9px]">
+                                                                <tr>
+                                                                    <th className="p-3">Cliente</th>
+                                                                    <th className="p-3">Equipo</th>
+                                                                    <th className="p-3 text-right">Costo Total</th>
+                                                                    <th className="p-3 text-right">Ganancia Neta</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-slate-100">
+                                                                {info.reparaciones.map((rep, rid) => (
+                                                                    <tr key={rid} className="hover:bg-slate-50 transition-colors">
+                                                                        <td className="p-3 font-bold text-slate-800">{rep.cliente}</td>
+                                                                        <td className="p-3 text-slate-600">{rep.equipo}</td>
+                                                                        <td className="p-3 text-right font-black text-slate-400">${rep.costo.toLocaleString('es-CO')}</td>
+                                                                        <td className="p-3 text-right font-black text-green-600">${rep.ganancia.toLocaleString('es-CO')}</td>
+                                                                    </tr>
+                                                                ))}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
                                 ))
                             ) : (
                                 <tr>
