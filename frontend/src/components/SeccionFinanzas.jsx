@@ -269,7 +269,7 @@ export default function SeccionFinanzas({ reparaciones, load }) {
                                 <th className="p-6 text-left tracking-widest">Fecha de Cierre</th>
                                 <th className="p-6 text-center tracking-widest">Cant. Entregas</th>
                                 <th className="p-6 text-right tracking-widest">Precio Repuestos</th>
-                                <th className="p-6 text-right tracking-widest">Total Recaudado</th>
+                                <th className="p-6 text-right tracking-widest">Total Ganancias</th>
                                 <th className="p-6 text-center tracking-widest">Detalles</th>
                             </tr>
                         </thead>
@@ -293,7 +293,7 @@ export default function SeccionFinanzas({ reparaciones, load }) {
                                                 ${info.repuestos.toLocaleString('es-CO')}
                                             </td>
                                             <td className="p-6 text-right font-black text-slate-900 text-xl">
-                                                ${info.monto.toLocaleString('es-CO')}
+                                                ${ (info.monto - info.repuestos).toLocaleString('es-CO') }
                                             </td>
                                             <td className="p-6 text-center">
                                                 <button
