@@ -127,7 +127,7 @@ export default function SeccionFinanzas({ reparaciones, load }) {
             <div className="bg-blue-600 p-6 rounded-[32px] border border-blue-500 shadow-sm text-center text-white relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10 text-9xl font-black italic select-none">$$</div>
                 <p className="text-[10px] font-black uppercase tracking-[0.4em] mb-4 opacity-80">
-                    {modoHistorico ? "Ganancia Total en Caja" : "Ganancia Total en Rango"}
+                    {modoHistorico ? "Ganancia Neta Total (Mano de Obra)" : "Ganancia Neta en Rango"}
                 </p>
                 <h2 className="text-7xl font-black italic tracking-tighter">
                     ${totalFiltrado.toLocaleString('es-CO')}
@@ -268,8 +268,9 @@ export default function SeccionFinanzas({ reparaciones, load }) {
                             <tr>
                                 <th className="p-6 text-left tracking-widest">Fecha de Cierre</th>
                                 <th className="p-6 text-center tracking-widest">Cant. Entregas</th>
+                                <th className="p-6 text-right tracking-widest">Total Recaudado</th>
                                 <th className="p-6 text-right tracking-widest">Precio Repuestos</th>
-                                <th className="p-6 text-right tracking-widest">Total Ganancias</th>
+                                <th className="p-6 text-right tracking-widest text-blue-400">Ganancia Neta</th>
                                 <th className="p-6 text-center tracking-widest">Detalles</th>
                             </tr>
                         </thead>
@@ -289,11 +290,14 @@ export default function SeccionFinanzas({ reparaciones, load }) {
                                                     {info.cantidad} {info.cantidad === 1 ? 'equipo' : 'equipos'}
                                                 </span>
                                             </td>
-                                            <td className="p-6 text-right font-black text-amber-600 text-lg">
+                                            <td className="p-6 text-right font-black text-slate-400">
+                                                ${info.monto.toLocaleString('es-CO')}
+                                            </td>
+                                            <td className="p-6 text-right font-black text-amber-600">
                                                 ${info.repuestos.toLocaleString('es-CO')}
                                             </td>
                                             <td className="p-6 text-right font-black text-slate-900 text-xl">
-                                                ${ (info.monto - info.repuestos).toLocaleString('es-CO') }
+                                                ${(info.monto - info.repuestos).toLocaleString('es-CO')}
                                             </td>
                                             <td className="p-6 text-center">
                                                 <button

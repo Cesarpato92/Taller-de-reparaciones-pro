@@ -8,15 +8,20 @@ export default function DashboardFinanzas({ reparaciones }) {
         const hoyLocal = new Date(hoy.getTime() - (offset * 60 * 1000)).toISOString().split('T')[0];
 
         let montoHoy = 0;
+        let gananciaHoy = 0;
         let entregadosHoy = 0;
         let totalCajaHistorico = 0;
+        let totalGananciaHistorica = 0;
 
         reparaciones.forEach(r => {
             const esEntregado = String(r.estado).toLowerCase() === 'entregado';
             const monto = parseFloat(r.costo_estimado) || 0;
+            const repuesto = parseFloat(r.precio_repuesto ?? r.costo_repuesto) || 0;
+            const ganancia = monto - repuesto;
 
             if (esEntregado) {
                 totalCajaHistorico += monto;
+                totalGananciaHistorica += ganancia;
 
                 // 2. Extraer solo la fecha del registro (YYYY-MM-DD)
                 const fechaRegistro = (r.fecha_fin || r.created_at || '').substring(0, 10);
@@ -24,12 +29,13 @@ export default function DashboardFinanzas({ reparaciones }) {
                 // 3. Comparar con hoy
                 if (fechaRegistro === hoyLocal) {
                     montoHoy += monto;
+                    gananciaHoy += ganancia;
                     entregadosHoy += 1;
                 }
             }
         });
 
-        return { montoHoy, entregadosHoy, totalCajaHistorico };
+        return { montoHoy, gananciaHoy, entregadosHoy, totalCajaHistorico, totalGananciaHistorica };
     }, [reparaciones]);
 
     return (
@@ -44,14 +50,16 @@ export default function DashboardFinanzas({ reparaciones }) {
             <div className="grid grid-cols-2 gap-4">
                 {/* CAJA DE HOY */}
                 <div className="bg-blue-600 p-4 rounded-2xl text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    <p className="text-[9px] font-black uppercase opacity-80">Ingresos Hoy</p>
-                    <p className="text-2xl font-black">${stats.montoHoy.toLocaleString()}</p>
+                    <p className="text-[9px] font-black uppercase opacity-80">Ganancia Hoy (Neta)</p>
+                    <p className="text-2xl font-black">${stats.gananciaHoy.toLocaleString()}</p>
+                    <p className="text-[8px] font-bold opacity-60 mt-1">Bruto: ${stats.montoHoy.toLocaleString()}</p>
                 </div>
 
                 {/* CAJA TOTAL HISTÓRICA */}
                 <div className="bg-slate-900 p-4 rounded-2xl text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                    <p className="text-[9px] font-black uppercase opacity-80">Total Caja</p>
-                    <p className="text-2xl font-black">${stats.totalCajaHistorico.toLocaleString()}</p>
+                    <p className="text-[9px] font-black uppercase opacity-80">Total Ganancia (Neta)</p>
+                    <p className="text-2xl font-black">${stats.totalGananciaHistorica.toLocaleString()}</p>
+                    <p className="text-[8px] font-bold opacity-60 mt-1">Caja: ${stats.totalCajaHistorico.toLocaleString()}</p>
                 </div>
             </div>
 

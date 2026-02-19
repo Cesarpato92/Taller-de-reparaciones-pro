@@ -136,7 +136,7 @@ export default function Admin() {
                             <div className="bg-white rounded-[24px] border border-slate-200 shadow-sm overflow-hidden">
                                 <div className="overflow-x-auto">
                                     <table className="w-full text-left text-xs min-w-[900px]">
-                                        <thead className="bg-slate-50 text-[9px] uppercase font-bold text-slate-400 border-b">
+                                        <thead className="bg-slate-50 text-[12px] uppercase font-bold text-slate-400 border-b">
                                             <tr>
                                                 <th className="p-3">Cliente</th>
                                                 <th className="p-3">Equipo</th>
@@ -154,7 +154,7 @@ export default function Admin() {
                                                     <td className="p-3">
                                                         <div className="flex flex-col">
                                                             <span className="font-bold text-slate-900 leading-tight">{r.nombre_render}</span>
-                                                            <span className="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded mt-1 w-fit">
+                                                            <span className="text-[10px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded mt-1 w-fit">
                                                                 CC: {r.cedula_render}
                                                             </span>
                                                         </div>
@@ -164,11 +164,11 @@ export default function Admin() {
                                                     </td>
                                                     <td className="p-4">
                                                         <div className="space-y-1">
-                                                            <p className="text-[11px] italic text-slate-400">"{r.descripcion_falla}"</p>
+                                                            <p className="text-[13px] italic text-slate-400">"{r.descripcion_falla}"</p>
                                                             <EditableDiagnostico id={r.id} valorInicial={r.diagnostico_tecnico} onSave={load} />
                                                         </div>
                                                     </td>
-                                                    <td className="p-4 text-center">
+                                                    <td className="p-4 text-center ">
                                                         <EditableCosto id={r.id} valorInicial={r.costo_estimado} onSave={load} />
                                                     </td>
                                                     <td className="p-4 text-center">
@@ -191,7 +191,7 @@ export default function Admin() {
                                                         <select
                                                             value={r.estado}
                                                             onChange={(e) => handleEstado(r.id, e.target.value)}
-                                                            className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-lg border-2 ${r.estado === 'Entregado' ? 'bg-green-100 text-green-700 border-green-200' :
+                                                            className={`text-[12px] font-black uppercase px-3 py-1.5 rounded-lg border-2 ${r.estado === 'Entregado' ? 'bg-green-100 text-green-700 border-green-200' :
                                                                 r.estado === 'En Reparación' ? 'bg-blue-100 text-blue-700 border-blue-200' :
                                                                     'bg-slate-100 text-slate-600 border-slate-200'
                                                                 }`}

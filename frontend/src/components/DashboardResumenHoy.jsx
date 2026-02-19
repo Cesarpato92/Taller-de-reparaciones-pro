@@ -17,17 +17,22 @@ export default function DashboardResumenHoy({ reparaciones }) {
                 const rawDate = r.fecha_fin || r.fecha_inicio || r.created_at || hoyLocal;
                 const fechaValida = String(rawDate).trim().substring(0, 10);
 
+                const montoNum = parseFloat(r.costo_estimado) || 0;
+                const repuestoNum = parseFloat(r.precio_repuesto ?? r.costo_repuesto) || 0;
+
                 return {
                     ...r,
                     fechaLimpia: fechaValida,
-                    montoNum: parseFloat(r.costo_estimado) || 0
+                    montoNum: montoNum,
+                    gananciaNum: montoNum - repuestoNum
                 };
             });
 
         // 2. Calcular balance de HOY
         todasEntregadas.forEach(r => {
             if (r.fechaLimpia === hoyLocal) {
-                montoHoy += r.montoNum;
+                const repuesto = parseFloat(r.precio_repuesto ?? r.costo_repuesto) || 0;
+                montoHoy += (r.montoNum - repuesto);
                 entregadosHoy += 1;
             }
         });
@@ -69,7 +74,7 @@ export default function DashboardResumenHoy({ reparaciones }) {
                                 </span>
                                 <span className="text-[9px] text-slate-500">{r.fechaLimpia}</span>
                             </div>
-                            <span className="text-xs font-black text-green-500">+${r.montoNum.toLocaleString('es-CO')}</span>
+                            <span className="text-xs font-black text-green-500">+${r.gananciaNum.toLocaleString('es-CO')}</span>
                         </div>
                     ))}
                     {historial.length === 0 && (

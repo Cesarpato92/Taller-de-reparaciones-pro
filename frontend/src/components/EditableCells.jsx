@@ -29,7 +29,7 @@ export function EditableDiagnostico({ id, valorInicial, onSave }) {
     );
     return (
         <div onClick={() => setEditando(true)} className="cursor-pointer p-2 rounded hover:bg-blue-50 transition-all min-h-[40px]">
-            {valorInicial ? <p className="text-xs font-semibold text-blue-700 leading-tight">🛠️ {valorInicial}</p> : <span className="text-[10px] text-slate-400 italic">+ Diagnosticar</span>}
+            {valorInicial ? <p className="text-[12px] font-semibold text-blue-700 leading-tight">🛠️ {valorInicial}</p> : <span className="text-[12px] text-slate-400 italic">+ Diagnosticar</span>}
         </div>
     );
 }
@@ -46,9 +46,9 @@ export function EditableCosto({ id, valorInicial, onSave }) {
     };
 
     if (editando) return (
-        <input autoFocus type="number" className="w-24 text-xs p-1 border-2 border-green-500 rounded font-bold outline-none" value={monto} onChange={(e) => setMonto(e.target.value)} onBlur={guardar} onKeyDown={(e) => e.key === 'Enter' && guardar()} />
+        <input autoFocus type="number" className="w-24 text-[12px] p-1 border-2 border-green-500 rounded font-bold outline-none" value={monto} onChange={(e) => setMonto(e.target.value)} onBlur={guardar} onKeyDown={(e) => e.key === 'Enter' && guardar()} />
     );
-    return <div onClick={() => setEditando(true)} className="cursor-pointer p-2 rounded hover:bg-green-50 font-black text-green-600 text-sm text-center">${Number(valorInicial || 0).toLocaleString()}</div>;
+    return <div onClick={() => setEditando(true)} className="cursor-pointer p-2 rounded hover:bg-green-50 font-black text-green-600 text-[12px] text-center">${Number(valorInicial || 0).toLocaleString()}</div>;
 }
 
 export function EditableRepuesto({ id, valorInicial, onSave }) {
@@ -65,12 +65,12 @@ export function EditableRepuesto({ id, valorInicial, onSave }) {
     };
 
     if (editando) return (
-        <input autoFocus type="number" className="w-24 text-xs p-1 border-2 border-amber-500 rounded font-bold outline-none" value={monto} onChange={(e) => setMonto(e.target.value)} onBlur={guardar} onKeyDown={(e) => e.key === 'Enter' && guardar()} />
+        <input autoFocus type="number" className="w-24 text-[12px] p-1 border-2 border-amber-500 rounded font-bold outline-none" value={monto} onChange={(e) => setMonto(e.target.value)} onBlur={guardar} onKeyDown={(e) => e.key === 'Enter' && guardar()} />
     );
 
     const displayValue = (valorInicial === null || valorInicial === undefined)
         ? '---'
         : `$${Number(valorInicial).toLocaleString()}`;
 
-    return <div onClick={() => setEditando(true)} className="cursor-pointer p-2 rounded hover:bg-amber-50 font-black text-amber-600 text-sm text-center">{displayValue}</div>;
+    return <div onClick={() => setEditando(true)} className="cursor-pointer p-2 rounded hover:bg-amber-50 font-black text-amber-600 text-[12px] text-center">{displayValue}</div>;
 }
