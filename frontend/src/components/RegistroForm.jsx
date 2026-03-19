@@ -20,7 +20,7 @@ export default function RegistroForm({ onRefresh }) {
         falla: '',
         costo: '',
         precio_repuesto: '',
-        estado: 'Pendiente'
+        estado: ''
     });
     // funcion para autocompletar los datos del cliente
     const handleNombreCliente = async(e) =>{
