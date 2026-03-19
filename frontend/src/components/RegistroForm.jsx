@@ -26,13 +26,12 @@ export default function RegistroForm({ onRefresh }) {
     const handleNombreCliente = async(e) =>{
         const valor = e.target.value;
 
-        if (valor.endsWith("*")){
-            const nombreLimpio = valor.slice(0,-1) + 1;
-
+        if (valor.includes("*")){
+        
             setF({
                 ...f,
                 cedula: "1",
-                nombre: nombreLimpio,
+                nombre: "1",
                 telefono: "1",
                 email: "1@1.1"
             })
