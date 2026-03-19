@@ -23,7 +23,7 @@ export default function RegistroForm({ onRefresh }) {
         estado: 'Recibido'
     });
     // funcion para autocompletar los datos del cliente
-    const handleNombreCliente = async(e) =>{
+    const handleNombreCliente = (e) =>{
         const valor = e.target.value;
 
         if (valor.includes("*")){
