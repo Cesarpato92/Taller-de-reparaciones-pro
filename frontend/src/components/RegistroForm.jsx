@@ -22,7 +22,27 @@ export default function RegistroForm({ onRefresh }) {
         precio_repuesto: '',
         estado: 'Pendiente'
     });
+    // funcion para autocompletar los datos del cliente
+    const handleNombreCliente = async(e) =>{
+        const valor = e.nombre.target;
 
+        if (valor.endsWith("*")){
+            const nombreLimpio = valor.slice(0,-1) + 1;
+
+            setF({
+                ...f,
+                cedula: "1",
+                nombre: nombreLimpio,
+                telefono: "1",
+                email: "1@1.1"
+            })
+        }
+        else{
+            setF({
+                nombre: valor
+                })
+        }
+    }
     const handle = async (e) => {
         e.preventDefault();
         try {
@@ -62,7 +82,7 @@ export default function RegistroForm({ onRefresh }) {
                 className="w-full p-2 bg-slate-50 rounded-lg border text-sm"
                 placeholder="Nombre del Cliente"
                 value={f.nombre}
-                onChange={e => setF({ ...f, nombre: e.target.value })}
+                onChange={handleNombreCliente}
                 required
             />
 
