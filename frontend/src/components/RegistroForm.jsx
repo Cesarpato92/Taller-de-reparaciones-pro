@@ -152,9 +152,10 @@ export default function RegistroForm({ onRefresh }) {
                 value={f.estado}
                 onChange={e => setF({ ...f, estado: e.target.value })}
             >
-                <option value="Pendiente">Pendiente</option>
-                <option value="En Proceso">En Proceso</option>
-                <option value="Reparado">Reparado</option>
+                <option value="Recibido">Recibido</option>
+                <option value="En reparación">En reparación</option>
+                <option value="Listo">Listo</option>
+                <option value="Entregado">Entregado</option>
             </select>
 
             <textarea
