@@ -63,7 +63,7 @@ export default function RegistroForm({ onRefresh }) {
             setF({
                 nombre: '', cedula: '', telefono: '', email: '',
                 tipo: 'Celular', marca: '', modelo: '',
-                falla: '', costo: '', precio_repuesto: '', estado: 'Pendiente'
+                falla: '', costo: '', precio_repuesto: '', estado: 'Recibido'
             });
 
             onRefresh();
