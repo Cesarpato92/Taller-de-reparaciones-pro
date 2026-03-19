@@ -51,7 +51,9 @@ export default function RegistroForm({ onRefresh }) {
                 precio_repuesto: Number(f.precio_repuesto) || 0,
                 // Mapeamos el campo 'falla' del formulario al campo
                 // que espera el backend: 'descripcion_falla'
-                descripcion_falla: f.falla
+                descripcion_falla: f.falla,
+                estado: f.estado
+                
             };
 
             await tallerService.registrar(datosFinales);
