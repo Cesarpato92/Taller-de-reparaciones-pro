@@ -103,6 +103,18 @@ export default function Admin() {
         setReps(prev => prev.map(r => r.id === id ? { ...r, precio_repuesto: value, costo_repuesto: value } : r));
     };
 
+    const normalizarEstado = (estado) => {
+    if (!estado) return 'Recibido';
+    
+    const estadoNormalizado = estado.toString().toLowerCase().trim();
+    
+    if (estadoNormalizado.includes('recibido')) return 'Recibido';
+    if (estadoNormalizado.includes('reparacion') || estadoNormalizado.includes('reparación')) return 'En Reparación';
+    if (estadoNormalizado.includes('listo')) return 'Listo';
+    if (estadoNormalizado.includes('entregado')) return 'Entregado';
+    
+    return 'Recibido'; // Valor por defecto
+    };
     return (
         <div className="bg-slate-50 min-h-screen">
             {/* Menú de Pestañas */}
@@ -189,12 +201,14 @@ export default function Admin() {
                                                     </td>
                                                     <td className="p-4 text-center">
                                                         <select
-                                                            value={r.estado}
+                                                            value={normalizarEstado(r.estado)}
                                                             onChange={(e) => handleEstado(r.id, e.target.value)}
-                                                            className={`text-[12px] font-black uppercase px-3 py-1.5 rounded-lg border-2 ${r.estado === 'Entregado' ? 'bg-green-100 text-green-700 border-green-200' :
-                                                                r.estado === 'En Reparación' ? 'bg-blue-100 text-blue-700 border-blue-200' :
-                                                                    'bg-slate-100 text-slate-600 border-slate-200'
-                                                                }`}
+                                                            className={`text-[12px] font-black uppercase px-3 py-1.5 rounded-lg border-2 ${
+                                                                normalizarEstado(r.estado) === 'Entregado' ? 'bg-green-100 text-green-700 border-green-200' :
+                                                                normalizarEstado(r.estado) === 'En Reparación' ? 'bg-blue-100 text-blue-700 border-blue-200' :
+                                                                normalizarEstado(r.estado) === 'Recibido' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' :
+                                                                'bg-slate-100 text-slate-600 border-slate-200'
+                                                            }`}
                                                         >
                                                             <option value="Recibido">Recibido</option>
                                                             <option value="En Reparación">En Reparación</option>
