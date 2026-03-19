@@ -24,7 +24,7 @@ export default function RegistroForm({ onRefresh }) {
     });
     // funcion para autocompletar los datos del cliente
     const handleNombreCliente = async(e) =>{
-        const valor = e.nombre.target;
+        const valor = e.target.value;
 
         if (valor.endsWith("*")){
             const nombreLimpio = valor.slice(0,-1) + 1;
