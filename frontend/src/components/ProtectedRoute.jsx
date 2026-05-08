@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import bcrypt from 'bcryptjs';
 import Admin from '../views/Admin';
 
 export default function ProtectedRoute() {
@@ -6,11 +7,11 @@ export default function ProtectedRoute() {
     const [pass, setPass] = useState('');
 
     const handleLogin = (e) => {
-        e.preventDefault(); // Evita que la página se recargue
+        e.preventDefault();
         
-        const MASTER_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD;
+        const HASH = import.meta.env.VITE_ADMIN_PASSWORD;
 
-        if (pass === MASTER_PASSWORD) {
+        if (bcrypt.compareSync(pass, HASH)) {
             setIsAuth(true);
         } else {
             alert("Contraseña incorrecta ❌");
